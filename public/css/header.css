@@ -1,0 +1,56 @@
+/* Navbar styling */
+.navbar {
+    padding: 0.5rem 1rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+/* Dropdown styling */
+.dropdown-toggle {
+    color: #212529;
+    background-color: transparent;
+    border: none;
+    font-weight: 500;
+}
+
+.dropdown-toggle:hover,
+.dropdown-toggle:focus {
+    color: #000;
+    background-color: rgba(0,0,0,0.03);
+}
+
+/* Dropdown menu */
+.dropdown-menu {
+    border-radius: 0.5rem;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    padding: 0.5rem 0;
+    border: 1px solid rgba(0,0,0,0.08);
+}
+
+.dropdown-item {
+    padding: 0.4rem 1.5rem;
+    color: #495057;
+}
+
+.dropdown-item:hover {
+    background-color: rgba(0,0,0,0.03);
+    color: #000;
+}
+
+/* Mega menu region headers */
+.dropdown-menu h6 {
+    color: #212529;
+    margin-bottom: 0.5rem;
+    padding: 0.5rem 1.5rem;
+    font-size: 0.875rem;
+}
+
+/* Mobile adjustments */
+@media (max-width: 991.98px) {
+    .navbar-brand {
+        margin-right: auto;
+    }
+
+    .mobile-search-container {
+        margin: 0.5rem 0;
+    }
+}

@@ -12,12 +12,7 @@ class FooterSeeder extends Seeder
 {
     public function run(): void
     {
-        // Disable foreign key checks and clear existing data
-        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
-        FooterColumnItem::truncate();
-        FooterColumn::truncate();
-        FooterSetting::truncate();
-        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+        $this->truncateData();
 
         // Create columns
         $columns = [
@@ -87,9 +82,19 @@ class FooterSeeder extends Seeder
             'address' => 'Số 7A Lê Đức Thọ, Phường Mai Dịch, Quận Cầu Giấy, Hà Nội',
             'responsible_person' => 'Ông Nguyễn Văn A',
             'copyright' => 'Copyright © 2025 thoitiet247.vn, All Rights Reserved',
+
             'social_facebook' => 'https://www.facebook.com/#',
             'social_telegram' => 'https://t.me/#',
-            'social_zalo' => 'https://zalo.me/#'
+            'social_youtube' => 'https://www.youtube.com/#',
+            'social_twitter' => 'https://twitter.com/#',
+            'social_instagram' => 'https://www.instagram.com/#',
+            'social_linkedin' => 'https://www.linkedin.com/#',
+            'social_pinterest' => 'https://www.pinterest.com/#',
+            'social_tiktok' => 'https://www.tiktok.com/#',
+
+            'usage_policy' => '#',
+            'privacy_policy' => '#',
+            'contact' => '#',
         ];
 
         foreach ($settings as $key => $value) {
@@ -98,5 +103,15 @@ class FooterSeeder extends Seeder
                 'value' => $value
             ]);
         }
+    }
+
+    public function truncateData()
+    {
+        // Disable foreign key checks and clear existing data
+        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        FooterColumnItem::truncate();
+        FooterColumn::truncate();
+        FooterSetting::truncate();
+        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
     }
 }

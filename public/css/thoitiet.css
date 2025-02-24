@@ -179,6 +179,7 @@
     border: 1px solid #7dbcff;
 }
 .weather-sub .title {
+    height: 35px;
     font-weight: 600;
     font-size: 16px;
     line-height: 27px;

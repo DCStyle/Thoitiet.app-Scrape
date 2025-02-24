@@ -36,21 +36,65 @@
                 <div class="d-flex gap-3 mb-4 mb-md-2 align-items-center">
                     @if($settings['social_facebook'])
                         <a rel="noopener nofollow" target="_blank" href="{{ $settings['social_facebook'] }}" title="Facebook">
-                            <img width="36" height="36" class="img-fluid" src="/assets/images/facebook.svg" alt="facebook fanpage">
+                            <i class="fa-brands fa-facebook display-6"></i>
                         </a>
                     @endif
                     @if($settings['social_telegram'])
                         <a rel="noopener nofollow" target="_blank" href="{{ $settings['social_telegram'] }}" title="Telegram">
-                            <img width="36" height="36" class="img-fluid" src="/assets/images/telegram.svg" alt="telegram">
+                            <i class="fa-brands fa-telegram display-6"></i>
                         </a>
                     @endif
-                    @if($settings['social_zalo'])
-                        <a rel="noopener nofollow" target="_blank" href="{{ $settings['social_zalo'] }}" title="Zalo">
-                            <img width="36" height="36" class="img-fluid" src="/assets/images/zalo.svg" alt="zalo">
+                    @if($settings['social_youtube'])
+                        <a rel="noopener nofollow" target="_blank" href="{{ $settings['social_youtube'] }}" title="Youtube">
+                            <i class="fa-brands fa-youtube display-6"></i>
+                        </a>
+                    @endif
+                    @if($settings['social_twitter'])
+                        <a rel="noopener nofollow" target="_blank" href="{{ $settings['social_twitter'] }}" title="Twitter">
+                            <i class="fa-brands fa-twitter display-6"></i>
+                        </a>
+                    @endif
+                    @if($settings['social_instagram'])
+                        <a rel="noopener nofollow" target="_blank" href="{{ $settings['social_instagram'] }}" title="Instagram">
+                            <i class="fa-brands fa-instagram display-6"></i>
+                        </a>
+                    @endif
+                    @if($settings['social_linkedin'])
+                        <a rel="noopener nofollow" target="_blank" href="{{ $settings['social_linkedin'] }}" title="Linkedin">
+                            <i class="fa-brands fa-linkedin display-6"></i>
+                        </a>
+                    @endif
+                    @if($settings['social_pinterest'])
+                        <a rel="noopener nofollow" target="_blank" href="{{ $settings['social_pinterest'] }}" title="Pinterest">
+                            <i class="fa-brands fa-pinterest display-6"></i>
+                        </a>
+                    @endif
+                    @if($settings['social_tiktok'])
+                        <a rel="noopener nofollow" target="_blank" href="{{ $settings['social_tiktok'] }}" title="Tiktok">
+                            <i class="fa-brands fa-tiktok display-6"></i>
                         </a>
                     @endif
                 </div>
-                <span>{{ $settings['copyright'] }}</span>
+
+                <span class="d-block mb-4 mb-md-2 ">
+                    {{ $settings['copyright'] }}
+                </span>
+
+                <div class="d-flex gap-3 mb-4 mb-md-2 align-items-center">
+                    @if($settings['usage_policy'])
+                        <a href="{{ $settings['usage_policy'] }}" title="Chính sách sử dụng">Chính sách sử dụng</a>
+                    @endif
+
+                    @if($settings['privacy_policy'])
+                        //
+                        <a href="{{ $settings['privacy_policy'] }}" title="Chính sách bảo mật">Chính sách bảo mật</a>
+                    @endif
+
+                    @if($settings['contact'])
+                        //
+                        <a href="{{ $settings['contact'] }}" title="Liên hệ">Liên hệ</a>
+                    @endif
+                </div>
             </div>
         </div>
     </div>

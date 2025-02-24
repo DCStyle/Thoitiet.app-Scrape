@@ -2,15 +2,20 @@
 
 namespace Database\Seeders;
 
+use App\Models\FooterColumn;
+use App\Models\FooterColumnItem;
+use App\Models\FooterSetting;
 use App\Models\Menu;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 class MenuSeeder extends Seeder
 {
     public function run(): void
     {
+        $this->truncateData();
+
         $mainMenus = [
-            ['title' => 'Trang chủ', 'icon' => '<i class="fa-solid fa-house"></i>', 'url' => '/', 'order' => 1],
             [
                 'title' => 'Tin thời tiết',
                 'icon' => '<i class="fa-solid fa-cloud-sun"></i>',
@@ -23,12 +28,6 @@ class MenuSeeder extends Seeder
                     ['title' => 'Tin tổng hợp', 'url' => '/danh-muc/tin-tong-hop', 'order' => 4],
                     ['title' => 'Khám phá', 'url' => '/danh-muc/kham-pha', 'order' => 5],
                 ]
-            ],
-            [
-                'title' => 'Thời tiết hàng ngày',
-                'icon' => '<i class="fa-solid fa-umbrella"></i>',
-                'url' => '/danh-muc/thoi-tiet-hang-ngay',
-                'order' => 3
             ]
         ];
 
@@ -45,5 +44,13 @@ class MenuSeeder extends Seeder
                 }
             }
         }
+    }
+
+    public function truncateData()
+    {
+        // Disable foreign key checks and clear existing data
+        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        Menu::truncate();
+        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
     }
 }
