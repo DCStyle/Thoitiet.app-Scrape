@@ -763,7 +763,7 @@ ul {
     border: 1px solid #7dbcff !important;
 }
 
-[class^='charts_day_'] {
+div[class^='charts_day_'] {
     display: none;
 }
 
