@@ -108,6 +108,14 @@
 <script src="{{ asset('js/temp_rain_daily.js') }}"></script>
 <script src="{{ asset('js/rains_hourly.js') }}"></script>
 
+<script src="{{ asset('js/next_days.js') }}"></script>
+<script type="text/javascript">
+    var charts_config_arr = []
+    for (let j = 1; j <= num_next_day; j++) {
+        charts_config_arr.push(charts_config('#rain_hourly_day_' + j, '#temp_hourly_day_' + j))
+    }
+</script>
+
 @vite(['resources/js/app.js'])
 
 @stack('scripts')
