@@ -21,7 +21,7 @@
 }
 .weather-general {
     background-color: #add5ff;
-    background-image: url(../assets/images/banner.png);
+    background-image: url(/assets/images/banner.png);
     background-size: cover;
     background-repeat: no-repeat;
     padding: 54px 0 88px;
@@ -601,7 +601,7 @@ h3.list-city-lq {
     line-height: 20px;
 }
 .sunrise-sunset {
-    background-image: url(../assets/images/sunrise-sunset.png);
+    background-image: url(/assets/images/sunrise-sunset.png);
     background-size: cover;
     background-position: center;
     border-radius: 4px;
@@ -1030,7 +1030,7 @@ body[data-layout-mode="dark"] {
     width: 25px;
     height: 25px;
     color: #585858;
-    background-image: url("../assets/images/list-arrow.svg");
+    background-image: url("/assets/images/list-arrow.svg");
 }
 #s-date-time {
     font-size: 12px;
