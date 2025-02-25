@@ -57,14 +57,6 @@ function Dong_ho() {
     giay.innerHTML = Giay_hien_tai.slice(-2);
 }
 
-$(document).ready(function() {
-    var today = new Date();
-    var date = '<span id="ngay_thang">'+today.getDate()+'/'+(today.getMonth()+1)+'/'+today.getFullYear()+'</span>';
-    var time = '<span id="gio">00</span><span>:</span><span id="phut">00</span><span>:</span><span id="giay">00</span><span> </span>';
-    var dateTime = time+' '+date;
-    document.getElementById("s-date-time").innerHTML = dateTime;
-    var Dem_gio = setInterval(Dong_ho, 1000);
-});
 (function($) {
     "use strict";
     $(document).ready(function () {

@@ -69,7 +69,8 @@ class ArticleController extends Controller
             $this->addToSitemap($article);
         }
 
-        return redirect()->route('admin.articles.index', ['type' => $article->is_prediction ? 'prediction' : 'normal'])
+        return redirect()
+            ->route('admin.articles.index')
             ->with('success', 'Article created successfully');
     }
 
@@ -115,7 +116,8 @@ class ArticleController extends Controller
             $this->removeFromSitemap($article);
         }
 
-        return redirect()->route('admin.articles.index', ['type' => $article->is_prediction ? 'prediction' : 'normal'])
+        return redirect()
+            ->route('admin.articles.index')
             ->with('success', 'Article updated successfully');
     }
 
@@ -129,7 +131,8 @@ class ArticleController extends Controller
 
         $article->delete();
 
-        return redirect()->route('admin.articles.index', ['type' => $article->is_prediction ? 'prediction' : 'normal'])
+        return redirect()
+            ->route('admin.articles.index')
             ->with('success', 'Article deleted successfully');
     }
 

@@ -40,6 +40,10 @@
                class="block px-4 py-2 hover:bg-gray-700 {{ request()->routeIs('admin.articles.*') ? 'bg-gray-700' : '' }}">
                 <i class="fas fa-newspaper mr-2"></i> Tin tức
             </a>
+            <a href="{{ route('admin.pages.index') }}"
+               class="block px-4 py-2 hover:bg-gray-700 {{ request()->routeIs('admin.pages.*') ? 'bg-gray-700' : '' }}">
+                <i class="fas fa-file-alt mr-2"></i> Các trang
+            </a>
             <a href="{{ route('admin.settings') }}"
                class="block px-4 py-2 hover:bg-gray-700 {{ request()->routeIs('admin.settings') ? 'bg-gray-700' : '' }}">
                 <i class="fas fa-cogs mr-2"></i> Cài đặt

@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\ArticleController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\FooterController;
 use App\Http\Controllers\Admin\MenuController;
+use App\Http\Controllers\Admin\PageController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\ContentController;
@@ -49,6 +50,9 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
         Route::delete('/{category}', [ArticleCategoryController::class, 'destroy'])->name('destroy');
     });
 
+    // Pages Management
+    Route::resource('pages', PageController::class)->except(['show']);
+
     // Settings
     Route::controller(SettingsController::class)->group(function () {
         Route::get('/settings', 'index')->name('settings');
@@ -82,6 +86,9 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
 Route::get('/danh-muc/{category:slug}', [App\Http\Controllers\ArticleCategoryController::class, 'show'])->name('article-categories.show');
 Route::get('/tin-tuc', [App\Http\Controllers\ArticleController::class, 'index'])->name('articles.index');
 Route::get('/tin-tuc/{article:slug}', [App\Http\Controllers\ArticleController::class, 'show'])->name('articles.show');
+
+// Pages
+Route::get('/trang/{page:slug}', [App\Http\Controllers\PageController::class, 'show'])->name('pages.show');
 
 // Images
 Route::post('images/upload', [ImageController::class, 'store'])->name('images.upload');

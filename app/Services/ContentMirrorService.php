@@ -240,6 +240,14 @@ class ContentMirrorService
         } catch (\Exception $e) {
         }
 
+        // Prepend text "Thời tiết " to each element ".weather-city .weather-city-inner li .list-city-lq a"
+        try {
+            $crawler->filter('.weather-city .weather-city-inner li .list-city-lq a')->each(function (Crawler $node) {
+                $node->getNode(0)->nodeValue = 'Thời tiết ' . $node->text();
+            });
+        } catch (\Exception $e) {
+        }
+
         // Replace href attributes in anchor tags
         $crawler->filter('a')->each(function (Crawler $node) use ($ourDomain, $sourceBaseDomain) {
             $href = $node->attr('href');
