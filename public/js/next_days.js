@@ -1,9 +1,47 @@
-var next_day_8 = ['01:00','04:00','07:00','10:00','13:00','16:00','19:00','22:00'];
-var charts_config = function(chartId1, chartId2) {
-    return function () {
-        var barColors = getChartColorsArray(chartId1);
-        var rains_hourly = getData('data-rains')(chartId1);
-        var options = {
+const next_day_8 = ['01:00','04:00','07:00','10:00','13:00','16:00','19:00','22:00'];
+
+// Function to get data from data attributes
+const getData = (attributeName) => {
+    return (selector) => {
+        const element = document.querySelector(selector);
+        if (!element) return [];
+
+        const dataValue = element.getAttribute(attributeName);
+        if (!dataValue) return [];
+
+        try {
+            return JSON.parse(dataValue);
+        } catch (e) {
+            console.error(`Error parsing ${attributeName} data:`, e);
+            return [];
+        }
+    };
+};
+
+// Function to get chart colors
+const getChartColorsArray = (selector) => {
+    const element = document.querySelector(selector);
+    if (!element) return [];
+
+    const colors = element.getAttribute('data-colors');
+    if (!colors) return ['#3498db']; // Default color if none specified
+
+    try {
+        return JSON.parse(colors);
+    } catch (e) {
+        console.error("Error parsing chart colors:", e);
+        return ['#3498db']; // Default color on error
+    }
+};
+
+// Main chart configuration function
+const charts_config = function(chartId1, chartId2) {
+    return function() {
+        // Rain chart configuration
+        const barColors = getChartColorsArray(chartId1);
+        const rains_hourly = getData('data-rains')(chartId1);
+
+        const rainOptions = {
             chart: {
                 height: 350,
                 type: 'bar',
@@ -46,12 +84,21 @@ var charts_config = function(chartId1, chartId2) {
                 horizontalAlign: 'center',
             }
         };
-        var rains_hourly_chart = new ApexCharts(document.querySelector(chartId1), options);
-        rains_hourly_chart.render();
 
-        var lineDatalabelColors = getChartColorsArray(chartId2);
-        var temp_hourly = getData('data-temps')(chartId2);
-        var options = {
+        // Create and render rain chart
+        const rainChartElement = document.querySelector(chartId1);
+        if (rainChartElement) {
+            const rains_hourly_chart = new ApexCharts(rainChartElement, rainOptions);
+            rains_hourly_chart.render();
+        } else {
+            console.error(`Element not found: ${chartId1}`);
+        }
+
+        // Temperature chart configuration
+        const lineDatalabelColors = getChartColorsArray(chartId2);
+        const temp_hourly = getData('data-temps')(chartId2);
+
+        const tempOptions = {
             chart: {
                 height: 380,
                 type: 'line',
@@ -65,7 +112,7 @@ var charts_config = function(chartId1, chartId2) {
             colors: lineDatalabelColors,
             dataLabels: {
                 enabled: true,
-                formatter: function(val, opt) {
+                formatter: function(val) {
                     return val + "°";
                 },
                 offsetY: -5,
@@ -84,7 +131,6 @@ var charts_config = function(chartId1, chartId2) {
                 data: temp_hourly
             }],
             title: {
-                // align: 'right',
                 style: {
                     fontWeight: '400'
                 }
@@ -112,7 +158,7 @@ var charts_config = function(chartId1, chartId2) {
                 shared: true,
                 intersect: false,
                 y: {
-                    formatter: function formatter(y, opt) {
+                    formatter: function(y) {
                         return y + "°C";
                     }
                 },
@@ -140,7 +186,14 @@ var charts_config = function(chartId1, chartId2) {
                 }
             }]
         };
-        var temps_hourly_chart = new ApexCharts(document.querySelector(chartId2), options);
-        temps_hourly_chart.render();
-    }
+
+        // Create and render temperature chart
+        const tempChartElement = document.querySelector(chartId2);
+        if (tempChartElement) {
+            const temps_hourly_chart = new ApexCharts(tempChartElement, tempOptions);
+            temps_hourly_chart.render();
+        } else {
+            console.error(`Element not found: ${chartId2}`);
+        }
+    };
 };

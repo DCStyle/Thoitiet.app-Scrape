@@ -105,9 +105,12 @@
 
 <script src="{{ asset('js/next_days.js') }}"></script>
 <script type="text/javascript">
+    var num_next_day = $(".weather-nextday-content .weather-nextday-chart").length;
     var charts_config_arr = []
-    for (let j = 1; j <= num_next_day; j++) {
-        charts_config_arr.push(charts_config('#rain_hourly_day_' + j, '#temp_hourly_day_' + j))
+    if (num_next_day) {
+        for (let j = 1; j <= num_next_day; j++) {
+            charts_config_arr.push(charts_config('#rain_hourly_day_' + j, '#temp_hourly_day_' + j))
+        }
     }
 </script>
 

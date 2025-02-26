@@ -2,11 +2,24 @@
     const chartElement = document.querySelector("#line_chart_datalabel");
 
     if (chartElement) {
-        var lineDatalabelColors = getChartColorsArray("#line_chart_datalabel");
-        var days_label = getData('data-dailys')("#line_chart_datalabel");
-        var temp_daily = getData('data-temps')("#line_chart_datalabel");
-        var cloud_daily = getData('data-clouds')("#line_chart_datalabel");
-        var options = {
+        // Function to get chart colors array
+        const getChartColorsArray = (chartId) => {
+            const colors = document.querySelector(chartId).getAttribute('data-colors');
+            return colors ? JSON.parse(colors) : ['#3980c0', '#f1734f'];
+        };
+
+        // Function to get data from data attributes
+        const getDataAttribute = (attribute, selector) => {
+            const dataString = document.querySelector(selector).getAttribute(attribute);
+            return dataString ? JSON.parse(dataString) : [];
+        };
+
+        const lineDatalabelColors = getChartColorsArray("#line_chart_datalabel");
+        const days_label = getDataAttribute('data-dailys', "#line_chart_datalabel");
+        const temp_daily = getDataAttribute('data-temps', "#line_chart_datalabel");
+        const cloud_daily = getDataAttribute('data-clouds', "#line_chart_datalabel");
+
+        const options = {
             chart: {
                 height: 380,
                 type: 'line',
@@ -74,11 +87,12 @@
                 shared: true,
                 intersect: false,
                 y: {
-                    formatter: function formatter(y, opt) {
-                        if (opt.seriesIndex == 0)
-                            return y + "%";
-                        else
+                    formatter: function(y, opt) {
+                        if (opt.seriesIndex === 0) {
                             return y + "°";
+                        } else {
+                            return y + "%";
+                        }
                     }
                 },
             },
@@ -96,7 +110,8 @@
                 }
             }]
         };
-        var chart = new ApexCharts(chartElement, options);
+
+        const chart = new ApexCharts(chartElement, options);
         chart.render();
     }
 })();
