@@ -91,9 +91,11 @@
 
     .dropdown-menu[aria-labelledby="dropdownProvinceButton"].show {
         top: 125px !important;
+        height: calc(100vh - 155px);
     }
 
     .navbar.is-sticky .dropdown-menu[aria-labelledby="dropdownProvinceButton"].show {
         top: 45px !important;
+        height: calc(100vh - 75px);
     }
 }
