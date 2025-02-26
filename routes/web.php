@@ -103,8 +103,6 @@ Route::get('/feed', [RssController::class, 'index'])->name('rss.index');
 Route::get('/feed/{category}', [RssController::class, 'category'])->name('rss.category');
 
 // Content
-
-Route::get('/api/find-local', [WeatherController::class, 'findLocal']);
 Route::post('/api/search-header', [WeatherController::class, 'searchHeader']);
 
 Route::get('/{path?}', [ContentController::class, 'show'])->where('path', '.*')->name('content.show');
