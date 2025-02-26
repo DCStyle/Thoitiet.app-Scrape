@@ -1,4 +1,4 @@
-@import url(https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap);body[data-layout-mode=dark] {
+body[data-layout-mode=dark] {
     background-color: #191e22;
     color: #ced4da
 }
@@ -3609,10 +3609,6 @@ body[data-layout-mode=dark] .flatpickr-time .numInputWrapper span.arrowDown:afte
 
 .ck.ck-button:not(.ck-disabled):hover,.ck.ck-toolbar .ck.ck-button.ck-on,a.ck.ck-button.ck-on,a.ck.ck-button:not(.ck-disabled):hover {
     background: hsla(0,0%,96.5%,.75)!important
-}
-
-.ck.ck-list__item .ck-button .ck-button__label {
-    font-family: Be Vietnam Pro,sans-serif
 }
 
 .tox-tinymce {
