@@ -105,14 +105,13 @@ class ArticleController extends Controller
             $validated['image'] = $request->file('image')->store('articles', 'public');
         }
 
-        $wasPublished = $article->is_published;
         $article->update($validated);
 
         $this->attachContentImages($article, $validated['content']);
 
-        if (!$wasPublished && $article->is_published) {
+        if ($article->is_published) {
             $this->addToSitemap($article);
-        } elseif ($wasPublished && !$article->is_published) {
+        } else {
             $this->removeFromSitemap($article);
         }
 

@@ -22,7 +22,7 @@
                 <pubDate>{{ $item->created_at->toRssString() }}</pubDate>
                 <description>{{ "<![CDATA[ " . $item->exceprt(150) . " ]]>" }}</description>
                 <content:encoded>{{ "<![CDATA[ " . $item->exceprt(150) . " ]]>" }}</content:encoded>
-                <media:content url="{{ $item->image ? asset(Storage::url($item->image)) : 'https://placehold.co/126' }}" medium="image">
+                <media:content url="{{ $item->getThumbnail() }}" medium="image">
                     <media:title>{{ $item->title }}</media:title>
                 </media:content>
             </item>

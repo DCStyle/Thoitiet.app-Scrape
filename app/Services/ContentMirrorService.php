@@ -192,7 +192,7 @@ class ContentMirrorService
     {
         $ourDomain = rtrim(env('APP_URL'), '/');
         $ourBaseDomain = parse_url($ourDomain, PHP_URL_HOST);
-        $sourceBaseDomain = 'thoitiet247.vn';
+        $sourceBaseDomain = config('url_mappings.source_domain');
 
         // Wrap the content in a temporary root element to ensure proper parsing
         $wrappedContent = "<div class=\"content-wrapper\">{$content}</div>";

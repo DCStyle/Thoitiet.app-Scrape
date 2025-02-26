@@ -2,9 +2,11 @@
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     @foreach($sitemaps as $sitemap)
         <sitemap>
-            <loc>{{ url(str_replace('ketqua.vn', request()->getHost(), parse_url($sitemap->url, PHP_URL_PATH))) }}</loc>
+            <loc>{{ $sitemap->url }}</loc>
             @if($sitemap->last_modified)
-                <lastmod>{{ $sitemap->last_modified }}</lastmod>
+                <lastmod>{{ \Carbon\Carbon::parse($sitemap->last_modified)
+                ->setTimezone('Asia/Ho_Chi_Minh')
+                ->toW3cString() }}</lastmod>
             @endif
         </sitemap>
     @endforeach

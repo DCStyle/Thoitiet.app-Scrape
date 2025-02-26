@@ -17,82 +17,10 @@ use Illuminate\View\View;
 class ContentController extends Controller
 {
     private ContentMirrorService $mirrorService;
-    protected array $scrapers = [
-        'do-ve-so' => CheckLotteryTicketScraper::class,
-    ];
+    protected array $scrapers = [];
 
     protected function initializeScrapers(): array
     {
-        $durations = [30, 60, 90, 100, 200, 300, 500];
-
-        foreach ($durations as $days) {
-            $this->scrapers["so-ket-qua-{$days}-ngay"] = function() use ($days) {
-                return new HistoricalResultsScraper($days);
-            };
-        }
-
-        $this->scrapers['so-ket-qua'] = function() {
-            return new HistoricalResultsScraper(10);
-        };
-
-        $soiCauTypes = [
-            'loto',
-            'loto-theo-thu',
-            'bach-thu',
-            'loto-bach-thu-theo-thu',
-            'giai-dac-biet',
-            'giai-dac-biet-theo-thu',
-            'an-hai-nhay',
-            'tam-giac',
-            'loai-loto',
-            'loai-loto-bach-thu',
-        ];
-
-        foreach ($soiCauTypes as $type) {
-            $this->scrapers["soi-cau/{$type}"] = function() use ($type) {
-                return new SoiCauScraper($type);
-            };
-        }
-
-        $thongKeTypes = [
-            'loto-gan',
-            'chu-ky-dan-loto',
-            'ket-qua-xo-so',
-            'dau-duoi-loto',
-            'tan-suat-loto',
-            'chu-ky-dan-dac-biet',
-            'cang-loto',
-            'theo-tong',
-            'quan-trong',
-            'dai-nhat',
-            'chu-ky-gan-theo-tinh',
-            'tan-so-nhip-loto',
-            'dac-biet-tuan',
-            'dac-biet-thang',
-        ];
-
-        foreach ($thongKeTypes as $type) {
-            $this->scrapers["thong-ke/{$type}"] = function() use ($type) {
-                return new ThongKeScraper($type);
-            };
-        }
-
-        $quayThuTypes = [
-            'xsmb',
-            'xsmn',
-            'xsmt',
-        ];
-
-        foreach ($quayThuTypes as $type) {
-            $this->scrapers["quay-thu-{$type}"] = function() use ($type) {
-                return new QuayThuScraper($type);
-            };
-        }
-
-        $this->scrapers['quay-thu-xo-so-hom-nay'] = function() {
-            return new QuayThuScraper('xsmb');
-        };
-
         return $this->scrapers;
     }
 

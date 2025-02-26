@@ -1,40 +1,42 @@
 <!DOCTYPE html>
 <html>
 <head>
-    @yield('seo')
-
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-
-    @if(isset($metadata))
-        <title>{{ $metadata['title'] }}</title>
-
-        @if($metadata['description'])
-            <meta name="description" content="{{ $metadata['description'] }}">
-        @endif
-
-        @if($metadata['keywords'])
-            <meta name="keywords" content="{{ $metadata['keywords'] }}">
-        @endif
-
-        @if($metadata['canonical'])
-            <link rel="canonical" href="{{ $metadata['canonical'] }}">
-        @endif
-
-        @foreach($metadata['og_tags'] ?? [] as $property => $content)
-            <meta property="{{ $property }}" content="{{ $content }}">
-        @endforeach
-
-        @foreach($metadata['twitter_tags'] ?? [] as $name => $content)
-            <meta name="{{ $name }}" content="{{ $content }}">
-        @endforeach
+    @hasSection('seo')
+        @yield('seo')
     @else
-        @include('partials.metadata')
+        @if(isset($metadata))
+            <title>{{ $metadata['title'] }}</title>
+
+            @if($metadata['description'])
+                <meta name="description" content="{{ $metadata['description'] }}">
+            @endif
+
+            @if($metadata['keywords'])
+                <meta name="keywords" content="{{ $metadata['keywords'] }}">
+            @endif
+
+            @if($metadata['canonical'])
+                <link rel="canonical" href="{{ $metadata['canonical'] }}">
+            @endif
+
+            @foreach($metadata['og_tags'] ?? [] as $property => $content)
+                <meta property="{{ $property }}" content="{{ $content }}">
+            @endforeach
+
+            @foreach($metadata['twitter_tags'] ?? [] as $name => $content)
+                <meta name="{{ $name }}" content="{{ $content }}">
+            @endforeach
+        @else
+            @include('partials.metadata')
+        @endif
+
+        <meta property="og:image" content="@yield('image', setting('site_og_image') ? asset(Storage::url(setting('site_og_image'))) : 'https://placehold.co/126')">
+        <meta name="twitter:card" content="summary_large_image">
+        <meta name="twitter:image" content="@yield('image', setting('site_og_image') ? asset(Storage::url(setting('site_og_image'))) : 'https://placehold.co/126')">
     @endif
 
-    <meta property="og:image" content="@yield('image', setting('site_og_image') ? asset(Storage::url(setting('site_og_image'))) : 'https://placehold.co/126')">
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:image" content="@yield('image', setting('site_og_image') ? asset(Storage::url(setting('site_og_image'))) : 'https://placehold.co/126')">
     <meta name="twitter:creator" content="{{ setting('site_creator', 'Kết Quả Xổ Số') }}">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="{{ setting('site_favicon') ? asset(Storage::url(setting('site_favicon'))) : 'https://placehold.co/16' }}">

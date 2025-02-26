@@ -2,20 +2,32 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\DB;
+use App\Models\Sitemap;
+use Illuminate\Support\Facades\Http;
+use Symfony\Component\DomCrawler\Crawler;
 
 class SitemapController extends Controller
 {
     public function index()
     {
-        $mainSitemaps = DB::table('sitemaps')
+        $sitemaps = Sitemap::query()
             ->whereNull('parent_path')
-            ->get()
-            ->map(fn($item) => $this->formatUrl($item));
+            ->get();
+
+        return response()->view('sitemaps.index', [
+            'sitemaps' => $sitemaps
+        ])->header('Content-Type', 'text/xml');
+    }
+
+    public function posts()
+    {
+        $urls = Sitemap::query()
+            ->where('parent_path', 'posts.xml')
+            ->orderBy('last_modified', 'desc')
+            ->get();
 
         return response()->view('sitemaps.urlset', [
-            'urls' => $mainSitemaps
+            'urls' => $urls,
         ])->header('Content-Type', 'text/xml');
     }
 
@@ -25,66 +37,30 @@ class SitemapController extends Controller
             $path .= '.xml';
         }
 
-        $config = config('url_mappings');
-        $sourceDomain = $config['source_domain'];
+        if ($path === 'sitemap.xml') {
+            return $this->index();
+        } elseif ($path == 'posts.xml') {
+            return $this->posts();
+        } else {
+            // Mirroring from source url
+            $sourceUrl = 'https://' . config('url_mappings.source_domain');
+            $fullSourceUrl = $sourceUrl . '/' . $path;
 
-        if ($path === 'results.xml') {
-            $urls = DB::table('sitemaps')
-                ->where('parent_path', 'results.xml')
-                // Where url not ending with 'results.xml'
-                ->where('url', 'not like', '%results.xml')
-                ->get()
-                ->map(fn($item) => $this->formatSitemapUrl($item));
+            $proxyUrl = 'https://ketqua5s.com';
+            $encodedUrl = base64_encode(rtrim($fullSourceUrl, '/'));
 
-            return response()->view('sitemaps.sitemapindex', [
-                'urls' => $urls
+            $proxyRequest = Http::timeout(300);
+            $response = $proxyRequest->get($proxyUrl . '?url=' . $encodedUrl);
+
+            $crawler = new Crawler($response->body());
+            $content = $crawler->html();
+
+            // Replace source domain with our domain
+            $content = str_replace($sourceUrl, config('app.url'), $content);
+
+            return response()->view('sitemaps.scrape', [
+                'content' => $content
             ])->header('Content-Type', 'text/xml');
         }
-
-        if (preg_match('/result-(\d{4})\.xml/', $path, $matches)) {
-            $query = DB::table('sitemaps')
-                ->where('parent_path', $path)
-                ->orderBy('url');
-
-            $urls = $query->get()->map(fn($item) => $this->formatUrl($item));
-
-            return response()->view('sitemaps.urlset', [
-                'urls' => $urls
-            ])->header('Content-Type', 'text/xml');
-        }
-
-        $urls = DB::table('sitemaps')
-            ->where('parent_path', $path)
-            ->orderBy('url')
-            ->get()
-            ->map(fn($item) => $this->formatUrl($item));
-
-        return response()->view('sitemaps.urlset', [
-            'urls' => $urls
-        ])->header('Content-Type', 'text/xml');
-    }
-
-    private function formatUrl($item)
-    {
-        $sourceDomain = config('url_mappings.source_domain');
-        return [
-            'loc' => str_replace($sourceDomain, request()->getHost(), $item->url),
-            'lastmod' => Carbon::parse($item->last_modified)
-                ->setTimezone('Asia/Ho_Chi_Minh')
-                ->toW3cString(),
-            'changefreq' => $item->changefreq ?? 'daily',
-            'priority' => $item->priority ?? '0.5'
-        ];
-    }
-
-    private function formatSitemapUrl($item)
-    {
-        $sourceDomain = config('url_mappings.source_domain');
-        return [
-            'loc' => str_replace($sourceDomain, request()->getHost(), $item->url),
-            'lastmod' => Carbon::parse($item->last_modified)
-                ->setTimezone('Asia/Ho_Chi_Minh')
-                ->toW3cString()
-        ];
     }
 }
