@@ -163,6 +163,69 @@ class ContentMirrorService
         );
     }
 
+    public function getContentWithDynamicParts(string $path): ?array
+    {
+        $content = $this->getContent($path);
+
+        if ($content && isset($content['content'])) {
+            $content['content'] = $this->insertDynamicContent($content['content']);
+        }
+
+        return $content;
+    }
+
+    public function insertDynamicContent($html): string
+    {
+        if (!$html) return '';
+
+        $crawler = new Crawler($html);
+
+        // Remove old ".news-popular" element
+        try {
+            $crawler->filter('.news-popular')->each(function (Crawler $node) {
+                $node->getNode(0)->parentNode->removeChild($node->getNode(0));
+            });
+        } catch (\Exception $e) {
+        }
+
+        // Insert latest articles after .weather-city
+        try {
+            $crawler->filter('.weather-city')->each(function (Crawler $node) {
+                $articles = Article::latest()
+                    ->where('is_published', 1)
+                    ->limit(5)
+                    ->get();
+
+                $latestArticlesView = view('components.latest-articles', compact('articles'))
+                    ->render();
+
+                // Create a new DOMDocument with proper encoding
+                $dom = new \DOMDocument('1.0', 'UTF-8');
+
+                // Prevent HTML5 errors
+                libxml_use_internal_errors(true);
+
+                // Convert HTML to UTF-8 before loading
+                $utf8Html = mb_convert_encoding($latestArticlesView, 'HTML-ENTITIES', 'UTF-8');
+
+                // Load the HTML with encoding options
+                $dom->loadHTML($utf8Html, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+                libxml_clear_errors();
+
+                // Import the node into the current document
+                $newNode = $node->getNode(0)->ownerDocument->importNode($dom->documentElement, true);
+
+                // Insert the new node after the weather-city element
+                $node->getNode(0)->parentNode->insertBefore($newNode, $node->getNode(0)->nextSibling);
+            });
+        } catch (\Exception $e) {
+            // Handle or log the exception
+            Log::error("Failed to insert dynamic content: " . $e->getMessage());
+        }
+
+        return $crawler->html();
+    }
+
     private function checkRateLimit(): bool
     {
         return RateLimiter::attempt('scraping', 60, function() { return true; });
@@ -287,44 +350,6 @@ class ContentMirrorService
             $ourDomain,
             $processedContent
         );
-
-        $crawler = new Crawler($processedContent);
-
-        // Insert component view "latest-articles" after ".weather-city" element
-        try {
-            $crawler->filter('.weather-city')->each(function (Crawler $node) {
-                $articles = Article::latest()
-                    ->where('is_published', 1)
-                    ->limit(5)
-                    ->get();
-
-                $latestArticlesView = view('components.latest-articles', compact('articles'))
-                    ->render();
-
-                // Create a new DOMDocument with proper encoding
-                $dom = new \DOMDocument('1.0', 'UTF-8');
-
-                // Prevent HTML5 errors
-                libxml_use_internal_errors(true);
-
-                // Convert HTML to UTF-8 before loading
-                $utf8Html = mb_convert_encoding($latestArticlesView, 'HTML-ENTITIES', 'UTF-8');
-
-                // Load the HTML with encoding options
-                $dom->loadHTML($utf8Html, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
-                libxml_clear_errors();
-
-                // Import the node into the current document
-                $newNode = $node->getNode(0)->ownerDocument->importNode($dom->documentElement, true);
-
-                // Insert the new node after the weather-city element
-                $node->getNode(0)->parentNode->insertBefore($newNode, $node->getNode(0)->nextSibling);
-            });
-        } catch (\Exception $e) {
-
-        }
-
-        $processedContent = $crawler->html();
 
         return $processedContent;
     }

@@ -137,6 +137,11 @@ class ContentController extends Controller
 
         $viewData = $result['data'] ?? [];
 
+        // Insert dynamic content if there's HTML content
+        if (isset($result['content']) && is_string($result['content'])) {
+            $result['content'] = $this->mirrorService->insertDynamicContent($result['content']);
+        }
+
         return view($result['template'], [
                 'content' => $result['content'],
                 'metadata' => $metadata
