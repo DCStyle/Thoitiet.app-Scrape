@@ -57,8 +57,8 @@ class PageController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'content' => 'required|string',
-            'meta_title' => 'required|string|max:255',
-            'meta_description' => 'required|string|max:255',
+            'meta_title' => 'nullable|string|max:255',
+            'meta_description' => 'nullable|string|max:255',
             'is_active' => 'required|boolean',
         ]);
 
