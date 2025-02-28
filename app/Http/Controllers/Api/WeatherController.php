@@ -9,15 +9,102 @@ use Illuminate\Support\Str;
 
 class WeatherController extends Controller
 {
+    /**
+     * Find Vietnamese province name from English name
+     */
+    private function findVietnameseProvince($englishName)
+    {
+        // Map of common English province names to Vietnamese
+        $provinceMap = [
+            'Hanoi' => 'Hà Nội',
+            'Ho Chi Minh' => 'Hồ Chí Minh',
+            'Thanh Hoa' => 'Thanh Hóa',
+            'Da Nang' => 'Đà Nẵng',
+            'Hai Phong' => 'Hải Phòng',
+            'Can Tho' => 'Cần Thơ',
+            'An Giang' => 'An Giang',
+            'Bac Giang' => 'Bắc Giang',
+            'Bac Kan' => 'Bắc Kạn',
+            'Bac Ninh' => 'Bắc Ninh',
+            'Ba Ria-Vung Tau' => 'Bà Rịa-Vũng Tàu',
+            'Ben Tre' => 'Bến Tre',
+            'Binh Dinh' => 'Bình Định',
+            'Binh Duong' => 'Bình Dương',
+            'Binh Phuoc' => 'Bình Phước',
+            'Binh Thuan' => 'Bình Thuận',
+            'Ca Mau' => 'Cà Mau',
+            'Cao Bang' => 'Cao Bằng',
+            'Dak Lak' => 'Đắk Lắk',
+            'Dak Nong' => 'Đắk Nông',
+            'Dien Bien' => 'Điện Biên',
+            'Dong Nai' => 'Đồng Nai',
+            'Dong Thap' => 'Đồng Tháp',
+            'Gia Lai' => 'Gia Lai',
+            'Ha Giang' => 'Hà Giang',
+            'Ha Nam' => 'Hà Nam',
+            'Ha Tinh' => 'Hà Tĩnh',
+            'Hai Duong' => 'Hải Dương',
+            'Hau Giang' => 'Hậu Giang',
+            'Hoa Binh' => 'Hòa Bình',
+            'Hung Yen' => 'Hưng Yên',
+            'Khanh Hoa' => 'Khánh Hòa',
+            'Kien Giang' => 'Kiên Giang',
+            'Kon Tum' => 'Kon Tum',
+            'Lai Chau' => 'Lai Châu',
+            'Lam Dong' => 'Lâm Đồng',
+            'Lang Son' => 'Lạng Sơn',
+            'Lao Cai' => 'Lào Cai',
+            'Long An' => 'Long An',
+            'Nam Dinh' => 'Nam Định',
+            'Nghe An' => 'Nghệ An',
+            'Ninh Binh' => 'Ninh Bình',
+            'Ninh Thuan' => 'Ninh Thuận',
+            'Phu Tho' => 'Phú Thọ',
+            'Phu Yen' => 'Phú Yên',
+            'Quang Binh' => 'Quảng Bình',
+            'Quang Nam' => 'Quảng Nam',
+            'Quang Ngai' => 'Quảng Ngãi',
+            'Quang Ninh' => 'Quảng Ninh',
+            'Quang Tri' => 'Quảng Trị',
+            'Soc Trang' => 'Sóc Trăng',
+            'Son La' => 'Sơn La',
+            'Tay Ninh' => 'Tây Ninh',
+            'Thai Binh' => 'Thái Bình',
+            'Thai Nguyen' => 'Thái Nguyên',
+            'Thua Thien Hue' => 'Thừa Thiên Huế',
+            'Tien Giang' => 'Tiền Giang',
+            'Tra Vinh' => 'Trà Vinh',
+            'Tuyen Quang' => 'Tuyên Quang',
+            'Vinh Long' => 'Vĩnh Long',
+            'Vinh Phuc' => 'Vĩnh Phúc',
+            'Yen Bai' => 'Yên Bái'
+        ];
+
+        // Try to find a match in our map
+        foreach ($provinceMap as $english => $vietnamese) {
+            if (Str::contains(Str::lower($englishName), Str::lower($english))) {
+                return $vietnamese;
+            }
+        }
+
+        // If no match, return the original name
+        return $englishName;
+    }
+
     public function findLocal(Request $request)
     {
         try {
-            // Get IP address (or use request IP)
+            // Get the visitor's IP address
             $ip = $request->ip();
 
-            // Call ipinfo.io API
-            $token = "3a4a3178d9a9d2";
-            $response = Http::get("https://ipinfo.io/{$ip}?token={$token}");
+            // Check if IP is localhost/local development
+            if ($ip == '127.0.0.1' || $ip == '::1' || str_starts_with($ip, '192.') || str_starts_with($ip, '10.')) {
+                // For local development, use a sample Vietnamese IP
+                // This IP is from Hanoi (example only)
+                $ip = '123.16.0.1';
+            }
+
+            $response = Http::get("https://ipinfo.io/{$ip}?token=3a4a3178d9a9d2");
 
             if ($response->failed()) {
                 return response()->json([
@@ -27,21 +114,13 @@ class WeatherController extends Controller
             }
 
             $locationData = $response->json();
+            $englishCityName = $locationData['city'];
+            $fallbackName = $this->findVietnameseProvince($englishCityName);
 
-            // Check if the location is in Vietnam
-            if (isset($locationData['country']) && $locationData['country'] === 'VN') {
-                return response()->json([
-                    'success' => 'true',
-                    'name' => $locationData['city'],
-                    'slug' => '/' . Str::slug($locationData['city'])
-                ]);
-            }
-
-            // Default fallback for non-Vietnamese locations
             return response()->json([
                 'success' => 'true',
-                'name' => 'Hà Nội', // Default to capital
-                'slug' => '/ha-noi'
+                'name' => $fallbackName,
+                'slug' => '/' . Str::slug($fallbackName)
             ]);
 
         } catch (\Exception $e) {
