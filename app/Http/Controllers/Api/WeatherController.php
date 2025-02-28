@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
@@ -91,6 +92,9 @@ class WeatherController extends Controller
         return $englishName;
     }
 
+    /**
+     * Get location data based on IP address
+     */
     public function findLocal(Request $request)
     {
         try {
@@ -106,40 +110,85 @@ class WeatherController extends Controller
 
             // Check if IP is localhost/local development
             if ($ip == '127.0.0.1' || $ip == '::1' || substr($ip, 0, 4) == '192.' || substr($ip, 0, 3) == '10.') {
-                // For local development, use a sample Vietnamese IP
-                $ip = '123.16.0.1'; // Hanoi example
+                // For local development, use a sample Vietnamese IP from environment or default
+                $ip = env('VN_TEST_IP', '123.16.0.1'); // Hanoi by default
             }
 
-            $response = Http::get("https://ipinfo.io/{$ip}?token=3a4a3178d9a9d2");
+            // Generate a reliable cache key
+            $cacheKey = 'location_data_' . md5($ip);
+
+            // Check if we have cached data for this IP
+            if (Cache::has($cacheKey)) {
+                Log::info("Using cached location data for IP: {$ip}");
+                $locationData = Cache::get($cacheKey);
+                $englishCityName = $locationData['city'] ?? '';
+                $vietnameseName = $this->findVietnameseProvince($englishCityName);
+
+                return response()->json([
+                    'success' => 'true',
+                    'name' => $vietnameseName,
+                    'slug' => '/' . Str::slug($vietnameseName)
+                ]);
+            }
+
+            // Get API token from environment
+            $token = env('IPINFO_TOKEN', '3a4a3178d9a9d2');
+            if (empty($token)) {
+                Log::warning("Missing IPINFO_TOKEN in environment variables");
+            }
+
+            // Make API request with improved timeout and error handling
+            $response = Http::timeout(5)
+                ->retry(3, 1000) // Retry 3 times with 1 second delay between attempts
+                ->get("https://ipinfo.io/{$ip}", [
+                    'token' => $token
+                ]);
 
             if ($response->failed()) {
+                Log::warning("IP geolocation failed for IP: {$ip}, Status: {$response->status()}");
+
                 return response()->json([
-                    'success' => 'false',
-                    'message' => 'Failed to get location data'
-                ], 500);
+                    'success' => 'true', // Still return success to the user
+                    'name' => 'Hà Nội', // Default location
+                    'slug' => '/ha-noi'
+                ]);
             }
 
-            // Check if the location is in Vietnam
             $locationData = $response->json();
 
+            // Store response in cache regardless of country
+            $cacheDuration = 1440; // Default 24 hours
+            Cache::put($cacheKey, $locationData, now()->addMinutes($cacheDuration));
+
             if (isset($locationData['country']) && $locationData['country'] === 'VN') {
-                $englishCityName = $locationData['city'];
-                $fallbackName = $this->findVietnameseProvince($englishCityName);
+                // Handle Vietnamese location
+                $englishCityName = $locationData['city'] ?? '';
+
+                // Use the province mapping as fallback
+                $vietnameseName = $this->findVietnameseProvince($englishCityName);
 
                 return response()->json([
                     'success' => 'true',
-                    'name' => $fallbackName,
-                    'slug' => '/' . Str::slug($fallbackName)
+                    'name' => $vietnameseName,
+                    'slug' => '/' . Str::slug($vietnameseName)
                 ]);
             } else {
+                // Not a Vietnamese IP, provide default
+                $defaultName = env('DEFAULT_LOCATION_NAME', 'Hà Nội');
+
                 return response()->json([
                     'success' => 'true',
-                    'name' => 'Hà Nội',
-                    'slug' => '/' . Str::slug('Hà Nội')
+                    'name' => $defaultName,
+                    'slug' => '/' . Str::slug($defaultName)
                 ]);
             }
-
         } catch (\Exception $e) {
+            // Log the full exception for debugging
+            Log::error("Error in findLocal: " . $e->getMessage(), [
+                'exception' => $e,
+                'trace' => $e->getTraceAsString()
+            ]);
+
             return response()->json([
                 'success' => 'false',
                 'message' => 'Error processing location: ' . $e->getMessage()
