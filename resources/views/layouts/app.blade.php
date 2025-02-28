@@ -96,9 +96,6 @@
     });
 </script>
 
-<script src="{{ asset('js/thoitiet.js') }}"></script>
-<script src="{{ asset('js/footer.js') }}"></script>
-
 <script src="{{ asset('js/temp_rain_hourly.js') }}"></script>
 <script src="{{ asset('js/temp_rain_daily.js') }}"></script>
 <script src="{{ asset('js/rains_hourly.js') }}"></script>
