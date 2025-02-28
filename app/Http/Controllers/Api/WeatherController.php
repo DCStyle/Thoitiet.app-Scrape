@@ -120,8 +120,9 @@ class WeatherController extends Controller
             }
 
             // Check if the location is in Vietnam
+            $locationData = $response->json();
+
             if (isset($locationData['country']) && $locationData['country'] === 'VN') {
-                $locationData = $response->json();
                 $englishCityName = $locationData['city'];
                 $fallbackName = $this->findVietnameseProvince($englishCityName);
 
