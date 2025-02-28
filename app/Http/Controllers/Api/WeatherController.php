@@ -119,15 +119,24 @@ class WeatherController extends Controller
                 ], 500);
             }
 
-            $locationData = $response->json();
-            $englishCityName = $locationData['city'];
-            $fallbackName = $this->findVietnameseProvince($englishCityName);
+            // Check if the location is in Vietnam
+            if (isset($locationData['country']) && $locationData['country'] === 'VN') {
+                $locationData = $response->json();
+                $englishCityName = $locationData['city'];
+                $fallbackName = $this->findVietnameseProvince($englishCityName);
 
-            return response()->json([
-                'success' => 'true',
-                'name' => $fallbackName,
-                'slug' => '/' . Str::slug($fallbackName)
-            ]);
+                return response()->json([
+                    'success' => 'true',
+                    'name' => $fallbackName,
+                    'slug' => '/' . Str::slug($fallbackName)
+                ]);
+            } else {
+                return response()->json([
+                    'success' => 'true',
+                    'name' => 'Hà Nội',
+                    'slug' => '/' . Str::slug('Hà Nội')
+                ]);
+            }
 
         } catch (\Exception $e) {
             return response()->json([
