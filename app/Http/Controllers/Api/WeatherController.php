@@ -94,14 +94,20 @@ class WeatherController extends Controller
     public function findLocal(Request $request)
     {
         try {
-            // Get the visitor's IP address
-            $ip = $request->ip();
+            // Get visitor IP with fallbacks for proxies and load balancers
+            $ip = $request->header('X-Forwarded-For') ??
+                $request->header('X-Real-IP') ??
+                $request->ip();
+
+            // If multiple IPs are returned (happens with X-Forwarded-For), get the first one
+            if (strpos($ip, ',') !== false) {
+                $ip = explode(',', $ip)[0];
+            }
 
             // Check if IP is localhost/local development
-            if ($ip == '127.0.0.1' || $ip == '::1' || str_starts_with($ip, '192.') || str_starts_with($ip, '10.')) {
+            if ($ip == '127.0.0.1' || $ip == '::1' || substr($ip, 0, 4) == '192.' || substr($ip, 0, 3) == '10.') {
                 // For local development, use a sample Vietnamese IP
-                // This IP is from Hanoi (example only)
-                $ip = '123.16.0.1';
+                $ip = '123.16.0.1'; // Hanoi example
             }
 
             $response = Http::get("https://ipinfo.io/{$ip}?token=3a4a3178d9a9d2");
