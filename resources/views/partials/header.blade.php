@@ -164,6 +164,19 @@
                     @endif
                 </div>
             @endforeach
+
+            <!-- Current local -->
+            <span class="btn whitespace-nowrap">
+                <i class="fa-solid fa-location-pin me-2"></i>
+                <a id="local-hien-tai">Unknown</a>
+
+                <a href="#" id="id-btn-change-local"
+                   type="button"
+                   class="btn btn-primary btn-sm d-none"
+                >
+                    <i class="fa-solid fa-rotate"></i>
+                </a>
+            </span>
         </div>
     </div>
 </nav>

@@ -500,3 +500,79 @@ document.addEventListener('DOMContentLoaded', () => {
         setInterval(Dong_ho, 1000);
     }
 });
+
+// Get local
+function getCookie(cname) {
+    const name = `${cname}=`;
+    const cookies = document.cookie.split(';');
+
+    for (let cookie of cookies) {
+        cookie = cookie.trim();
+        if (cookie.indexOf(name) === 0) {
+            return cookie.substring(name.length);
+        }
+    }
+    return "";
+}
+
+// Main initialization function
+document.addEventListener('DOMContentLoaded', function() {
+    const localElement = document.getElementById("local-hien-tai");
+
+    // Check if we need to get location
+    if (getCookie("cTinhThanh") === "") {
+        getDefaultLocation();
+    }
+
+    // Set up location button
+    document.getElementById("id-btn-change-local").addEventListener('click', function() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                getCurrentLocation,
+                error => console.error("Geolocation error:", error),
+                { maximumAge: 60000, timeout: 5000 }
+            );
+        } else {
+            alert("Trình duyệt không hỗ trợ.");
+        }
+    });
+});
+
+// Function to get location using coordinates
+function getCurrentLocation(position) {
+    const baseUrl = window.location.origin;
+    const { latitude, longitude } = position.coords;
+
+    fetchLocation(`${baseUrl}/api/find-local?lat=${latitude}&lon=${longitude}`)
+        .then(() => window.location.reload());
+}
+
+// Function to get default location
+function getDefaultLocation() {
+    const baseUrl = window.location.origin;
+    fetchLocation(`${baseUrl}/api/find-local`);
+}
+
+// Shared location fetching logic
+function fetchLocation(url) {
+    return fetch(url, {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+            'Accept': 'application/json'
+        }
+    })
+        .then(response => {
+            if (!response.ok) throw new Error(`Network response error: ${response.status}`);
+            return response.json();
+        })
+        .then(result => {
+            const localElement = document.getElementById("local-hien-tai");
+            if (localElement) {
+                localElement.setAttribute("href", result.slug);
+                localElement.textContent = result.name;
+            }
+            return result;
+        })
+        .catch(error => console.error("Error fetching location:", error));
+}

@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\WeatherController;
 
 /*
 |--------------------------------------------------------------------------
@@ -18,5 +19,5 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::post('/lottery/check', [\App\Http\Controllers\CheckLotteryTicketController::class, 'checkTicketApi'])
-    ->name('api.lottery.check-ticket');
+Route::get('find-local', [WeatherController::class, 'findLocal']);
+Route::post('search-header', [WeatherController::class, 'searchHeader']);
