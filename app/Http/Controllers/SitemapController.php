@@ -46,11 +46,8 @@ class SitemapController extends Controller
             $sourceUrl = 'https://' . config('url_mappings.source_domain');
             $fullSourceUrl = $sourceUrl . '/' . $path;
 
-            $proxyUrl = 'https://ketqua5s.com';
-            $encodedUrl = base64_encode(rtrim($fullSourceUrl, '/'));
-
             $proxyRequest = Http::timeout(300);
-            $response = $proxyRequest->get($proxyUrl . '?url=' . $encodedUrl);
+            $response = $proxyRequest->get($fullSourceUrl);
 
             $crawler = new Crawler($response->body());
             $content = $crawler->html();
