@@ -238,8 +238,11 @@ class ContentMirrorService
 
     private function sendRequest(string $url, array $params, string $method): \Illuminate\Http\Client\Response
     {
+        $proxyUrl = 'https://caykeongot.com/proxy';
+        $encodedUrl = base64_encode(rtrim($url, '/'));
+
         $proxyRequest = Http::timeout(300);
-        return $proxyRequest->get($url);
+        return $proxyRequest->get($proxyUrl . '?url=' . $encodedUrl);
     }
 
     private function extractContent(string $html, string $selector): string
