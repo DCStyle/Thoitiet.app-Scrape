@@ -12,6 +12,7 @@
 }
 .top-menu {
     position: fixed;
+    left: 0;
     top: 0px;
     z-index: 999;
     background-color: #b3d9ffeb;
@@ -565,6 +566,7 @@ h3.list-city-lq {
     flex-shrink: 0;
     margin-right: 15px;
     border-radius: 50%;
+    text-align: center;
     justify-content: center;
     align-items: center;
     display: flex;

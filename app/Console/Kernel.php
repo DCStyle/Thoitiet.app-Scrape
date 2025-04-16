@@ -11,6 +11,8 @@ class Kernel extends ConsoleKernel
      * The Artisan commands provided by your application.
      */
     protected $commands = [
+        Commands\GeocodeLocationsCommand::class,
+        Commands\PrefetchWeatherDataCommand::class
     ];
 
     /**
@@ -18,7 +20,7 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-
+        $schedule->command('weather:prefetch')->hourly();
     }
 
     /**

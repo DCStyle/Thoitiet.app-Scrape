@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Services\AirQualityService;
 use App\Services\ContentMirrorService;
 use App\View\Composers\FooterComposer;
 use Illuminate\Support\Facades\View;
@@ -16,6 +17,10 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->singleton(ContentMirrorService::class, function ($app) {
             return new ContentMirrorService();
+        });
+
+        $this->app->singleton(AirQualityService::class, function ($app) {
+            return new AirQualityService();
         });
     }
 

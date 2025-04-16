@@ -15,6 +15,7 @@ use App\Http\Controllers\ImageController;
 use App\Http\Controllers\RssController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\SitemapGoogleNewsController;
+use App\Http\Controllers\WeatherController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -81,24 +82,252 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
     });
 });
 
-// Articles
+// Weather API endpoints
+Route::prefix('api')->name('api.')->group(function () {
+    Route::get('/provinces', [WeatherController::class, 'apiGetProvinces'])->name('provinces');
+    Route::get('/provinces/{province}/districts', [WeatherController::class, 'apiGetDistricts'])->name('districts');
+    Route::get('/districts/{district}/wards', [WeatherController::class, 'apiGetWards'])->name('wards');
+});
+
+// Articles, Pages, and other routes remain unchanged
 Route::get('/danh-muc/{category:slug}', [App\Http\Controllers\ArticleCategoryController::class, 'show'])->name('article-categories.show');
 Route::get('/tin-tuc', [App\Http\Controllers\ArticleController::class, 'index'])->name('articles.index');
 Route::get('/tin-tuc/{article:slug}', [App\Http\Controllers\ArticleController::class, 'show'])->name('articles.show');
-
-// Pages
 Route::get('/trang/{page:slug}', [App\Http\Controllers\PageController::class, 'show'])->name('pages.show');
-
-// Images
 Route::post('images/upload', [ImageController::class, 'store'])->name('images.upload');
-
-// Site map
 Route::get('/sitemap-news.xml', [SitemapGoogleNewsController::class, 'index'])->name('sitemap.news');
 Route::get('/sitemap.xml', [SitemapController::class, 'index']);
 Route::get('/{path}.xml', [SitemapController::class, 'show'])->where('path', '.*');
-
-// RSS feed
 Route::get('/feed', [RssController::class, 'index'])->name('rss.index');
 Route::get('/feed/{category}', [RssController::class, 'category'])->name('rss.category');
 
-Route::get('/{path?}', [ContentController::class, 'show'])->where('path', '.*')->name('content.show');
+// Home page
+Route::get('/', [WeatherController::class, 'index'])->name('home');
+
+// API routes
+Route::get('/api/weather/{location?}', [WeatherController::class, 'apiGetWeather'])->name('api.weather');
+Route::get('/api/provinces', [WeatherController::class, 'apiGetProvinces'])->name('api.provinces');
+Route::get('/api/provinces/{province}/districts', [WeatherController::class, 'apiGetDistricts'])->name('api.districts');
+Route::get('/api/districts/{district}/wards', [WeatherController::class, 'apiGetWards'])->name('api.wards');
+
+// Hourly forecast routes
+Route::get('/{provinceSlug}/theo-gio', [WeatherController::class, 'showProvinceHourly'])
+    ->name('weather.province.hourly')
+    ->where('provinceSlug', '[a-zA-Z0-9_-]+');
+
+Route::get('/{provinceSlug}/{districtSlug}/theo-gio', [WeatherController::class, 'showDistrictHourly'])
+    ->name('weather.district.hourly')
+    ->where([
+        'provinceSlug' => '[a-zA-Z0-9_-]+',
+        'districtSlug' => '[a-zA-Z0-9_-]+'
+    ]);
+
+Route::get('/{provinceSlug}/{districtSlug}/{wardSlug}/theo-gio', [WeatherController::class, 'showWardHourly'])
+    ->name('weather.ward.hourly')
+    ->where([
+        'provinceSlug' => '[a-zA-Z0-9_-]+',
+        'districtSlug' => '[a-zA-Z0-9_-]+',
+        'wardSlug' => '[a-zA-Z0-9_-]+'
+    ]);
+
+// Tomorrow forecast routes
+Route::get('/{provinceSlug}/ngay-mai', [WeatherController::class, 'showProvinceTomorrow'])
+    ->name('weather.province.tomorrow')
+    ->where('provinceSlug', '[a-zA-Z0-9_-]+');
+
+Route::get('/{provinceSlug}/{districtSlug}/ngay-mai', [WeatherController::class, 'showDistrictTomorrow'])
+    ->name('weather.district.tomorrow')
+    ->where([
+        'provinceSlug' => '[a-zA-Z0-9_-]+',
+        'districtSlug' => '[a-zA-Z0-9_-]+'
+    ]);
+
+Route::get('/{provinceSlug}/{districtSlug}/{wardSlug}/ngay-mai', [WeatherController::class, 'showWardTomorrow'])
+    ->name('weather.ward.tomorrow')
+    ->where([
+        'provinceSlug' => '[a-zA-Z0-9_-]+',
+        'districtSlug' => '[a-zA-Z0-9_-]+',
+        'wardSlug' => '[a-zA-Z0-9_-]+'
+    ]);
+
+// Daily forecast routes for provinces
+Route::get('/{provinceSlug}/3-ngay-toi', [WeatherController::class, 'showProvinceDaily'])
+    ->name('weather.province.daily.3')
+    ->where('provinceSlug', '[a-zA-Z0-9_-]+')
+    ->defaults('days', 3);
+
+Route::get('/{provinceSlug}/5-ngay-toi', [WeatherController::class, 'showProvinceDaily'])
+    ->name('weather.province.daily.5')
+    ->where('provinceSlug', '[a-zA-Z0-9_-]+')
+    ->defaults('days', 5);
+
+Route::get('/{provinceSlug}/7-ngay-toi', [WeatherController::class, 'showProvinceDaily'])
+    ->name('weather.province.daily.7')
+    ->where('provinceSlug', '[a-zA-Z0-9_-]+')
+    ->defaults('days', 7);
+
+Route::get('/{provinceSlug}/10-ngay-toi', [WeatherController::class, 'showProvinceDaily'])
+    ->name('weather.province.daily.10')
+    ->where('provinceSlug', '[a-zA-Z0-9_-]+')
+    ->defaults('days', 10);
+
+Route::get('/{provinceSlug}/15-ngay-toi', [WeatherController::class, 'showProvinceDaily'])
+    ->name('weather.province.daily.15')
+    ->where('provinceSlug', '[a-zA-Z0-9_-]+')
+    ->defaults('days', 15);
+
+Route::get('/{provinceSlug}/20-ngay-toi', [WeatherController::class, 'showProvinceDaily'])
+    ->name('weather.province.daily.20')
+    ->where('provinceSlug', '[a-zA-Z0-9_-]+')
+    ->defaults('days', 20);
+
+Route::get('/{provinceSlug}/30-ngay-toi', [WeatherController::class, 'showProvinceDaily'])
+    ->name('weather.province.daily.30')
+    ->where('provinceSlug', '[a-zA-Z0-9_-]+')
+    ->defaults('days', 30);
+
+// Daily forecast routes for districts
+Route::get('/{provinceSlug}/{districtSlug}/3-ngay-toi', [WeatherController::class, 'showDistrictDaily'])
+    ->name('weather.district.daily.3')
+    ->where([
+        'provinceSlug' => '[a-zA-Z0-9_-]+',
+        'districtSlug' => '[a-zA-Z0-9_-]+'
+    ])
+    ->defaults('days', 3);
+
+Route::get('/{provinceSlug}/{districtSlug}/5-ngay-toi', [WeatherController::class, 'showDistrictDaily'])
+    ->name('weather.district.daily.5')
+    ->where([
+        'provinceSlug' => '[a-zA-Z0-9_-]+',
+        'districtSlug' => '[a-zA-Z0-9_-]+'
+    ])
+    ->defaults('days', 5);
+
+Route::get('/{provinceSlug}/{districtSlug}/7-ngay-toi', [WeatherController::class, 'showDistrictDaily'])
+    ->name('weather.district.daily.7')
+    ->where([
+        'provinceSlug' => '[a-zA-Z0-9_-]+',
+        'districtSlug' => '[a-zA-Z0-9_-]+'
+    ])
+    ->defaults('days', 7);
+
+Route::get('/{provinceSlug}/{districtSlug}/10-ngay-toi', [WeatherController::class, 'showDistrictDaily'])
+    ->name('weather.district.daily.10')
+    ->where([
+        'provinceSlug' => '[a-zA-Z0-9_-]+',
+        'districtSlug' => '[a-zA-Z0-9_-]+'
+    ])
+    ->defaults('days', 10);
+
+Route::get('/{provinceSlug}/{districtSlug}/15-ngay-toi', [WeatherController::class, 'showDistrictDaily'])
+    ->name('weather.district.daily.15')
+    ->where([
+        'provinceSlug' => '[a-zA-Z0-9_-]+',
+        'districtSlug' => '[a-zA-Z0-9_-]+'
+    ])
+    ->defaults('days', 15);
+
+Route::get('/{provinceSlug}/{districtSlug}/20-ngay-toi', [WeatherController::class, 'showDistrictDaily'])
+    ->name('weather.district.daily.20')
+    ->where([
+        'provinceSlug' => '[a-zA-Z0-9_-]+',
+        'districtSlug' => '[a-zA-Z0-9_-]+'
+    ])
+    ->defaults('days', 20);
+
+Route::get('/{provinceSlug}/{districtSlug}/30-ngay-toi', [WeatherController::class, 'showDistrictDaily'])
+    ->name('weather.district.daily.30')
+    ->where([
+        'provinceSlug' => '[a-zA-Z0-9_-]+',
+        'districtSlug' => '[a-zA-Z0-9_-]+'
+    ])
+    ->defaults('days', 30);
+
+// Daily forecast routes for wards
+Route::get('/{provinceSlug}/{districtSlug}/{wardSlug}/3-ngay-toi', [WeatherController::class, 'showWardDaily'])
+    ->name('weather.ward.daily.3')
+    ->where([
+        'provinceSlug' => '[a-zA-Z0-9_-]+',
+        'districtSlug' => '[a-zA-Z0-9_-]+',
+        'wardSlug' => '[a-zA-Z0-9_-]+'
+    ])
+    ->defaults('days', 3);
+
+Route::get('/{provinceSlug}/{districtSlug}/{wardSlug}/5-ngay-toi', [WeatherController::class, 'showWardDaily'])
+    ->name('weather.ward.daily.5')
+    ->where([
+        'provinceSlug' => '[a-zA-Z0-9_-]+',
+        'districtSlug' => '[a-zA-Z0-9_-]+',
+        'wardSlug' => '[a-zA-Z0-9_-]+'
+    ])
+    ->defaults('days', 5);
+
+Route::get('/{provinceSlug}/{districtSlug}/{wardSlug}/7-ngay-toi', [WeatherController::class, 'showWardDaily'])
+    ->name('weather.ward.daily.7')
+    ->where([
+        'provinceSlug' => '[a-zA-Z0-9_-]+',
+        'districtSlug' => '[a-zA-Z0-9_-]+',
+        'wardSlug' => '[a-zA-Z0-9_-]+'
+    ])
+    ->defaults('days', 7);
+
+Route::get('/{provinceSlug}/{districtSlug}/{wardSlug}/10-ngay-toi', [WeatherController::class, 'showWardDaily'])
+    ->name('weather.ward.daily.10')
+    ->where([
+        'provinceSlug' => '[a-zA-Z0-9_-]+',
+        'districtSlug' => '[a-zA-Z0-9_-]+',
+        'wardSlug' => '[a-zA-Z0-9_-]+'
+    ])
+    ->defaults('days', 10);
+
+Route::get('/{provinceSlug}/{districtSlug}/{wardSlug}/15-ngay-toi', [WeatherController::class, 'showWardDaily'])
+    ->name('weather.ward.daily.15')
+    ->where([
+        'provinceSlug' => '[a-zA-Z0-9_-]+',
+        'districtSlug' => '[a-zA-Z0-9_-]+',
+        'wardSlug' => '[a-zA-Z0-9_-]+'
+    ])
+    ->defaults('days', 15);
+
+Route::get('/{provinceSlug}/{districtSlug}/{wardSlug}/20-ngay-toi', [WeatherController::class, 'showWardDaily'])
+    ->name('weather.ward.daily.20')
+    ->where([
+        'provinceSlug' => '[a-zA-Z0-9_-]+',
+        'districtSlug' => '[a-zA-Z0-9_-]+',
+        'wardSlug' => '[a-zA-Z0-9_-]+'
+    ])
+    ->defaults('days', 20);
+
+Route::get('/{provinceSlug}/{districtSlug}/{wardSlug}/30-ngay-toi', [WeatherController::class, 'showWardDaily'])
+    ->name('weather.ward.daily.30')
+    ->where([
+        'provinceSlug' => '[a-zA-Z0-9_-]+',
+        'districtSlug' => '[a-zA-Z0-9_-]+',
+        'wardSlug' => '[a-zA-Z0-9_-]+'
+    ])
+    ->defaults('days', 30);
+
+// Simple location routes - THESE MUST BE AT THE END
+Route::get('/{provinceSlug}', [WeatherController::class, 'showProvince'])
+    ->name('weather.province')
+    ->where('provinceSlug', '[a-zA-Z0-9_-]+');
+
+Route::get('/{provinceSlug}/{districtSlug}', [WeatherController::class, 'showDistrict'])
+    ->name('weather.district')
+    ->where([
+        'provinceSlug' => '[a-zA-Z0-9_-]+',
+        'districtSlug' => '[a-zA-Z0-9_-]+'
+    ]);
+
+Route::get('/{provinceSlug}/{districtSlug}/{wardSlug}', [WeatherController::class, 'showWard'])
+    ->name('weather.ward')
+    ->where([
+        'provinceSlug' => '[a-zA-Z0-9_-]+',
+        'districtSlug' => '[a-zA-Z0-9_-]+',
+        'wardSlug' => '[a-zA-Z0-9_-]+'
+    ]);
+
+// Fallback to content mirroring for other paths (only if needed for some paths still)
+//Route::get('/{path}', [ContentController::class, 'show'])
+//    ->where('path', '.*')
+//    ->name('content.show');
