@@ -11,32 +11,58 @@ use Illuminate\Support\Facades\Log;
 
 class WeatherService
 {
-    private $baseUrl = 'https://api.open-meteo.com/v1/forecast';
-    private $geocodingUrl = 'https://rsapi.goong.io/geocode';
+    private $baseUrl = 'http://api.weatherapi.com/v1';
 
-    // Weather condition mapping
-    private $weatherCodes = [
-        0 => ['icon' => 'fa-sun', 'description' => 'Trời quang đãng'],
-        1 => ['icon' => 'fa-sun', 'description' => 'Bầu trời quang đãng'],
-        2 => ['icon' => 'fa-cloud-sun', 'description' => 'Có mây rải rác'],
-        3 => ['icon' => 'fa-cloud', 'description' => 'Nhiều mây'],
-        45 => ['icon' => 'fa-smog', 'description' => 'Sương mù'],
-        48 => ['icon' => 'fa-smog', 'description' => 'Sương mù đọng băng'],
-        51 => ['icon' => 'fa-cloud-rain', 'description' => 'Mưa phùn nhẹ'],
-        53 => ['icon' => 'fa-cloud-rain', 'description' => 'Mưa phùn vừa'],
-        55 => ['icon' => 'fa-cloud-rain', 'description' => 'Mưa phùn dày đặc'],
-        61 => ['icon' => 'fa-cloud-rain', 'description' => 'Mưa nhẹ'],
-        63 => ['icon' => 'fa-cloud-rain', 'description' => 'Mưa vừa'],
-        65 => ['icon' => 'fa-cloud-showers-heavy', 'description' => 'Mưa nặng hạt'],
-        71 => ['icon' => 'fa-snowflake', 'description' => 'Tuyết rơi nhẹ'],
-        73 => ['icon' => 'fa-snowflake', 'description' => 'Tuyết rơi vừa'],
-        75 => ['icon' => 'fa-snowflake', 'description' => 'Tuyết rơi dày đặc'],
-        80 => ['icon' => 'fa-cloud-rain', 'description' => 'Mưa rào nhẹ'],
-        81 => ['icon' => 'fa-cloud-rain', 'description' => 'Mưa rào vừa'],
-        82 => ['icon' => 'fa-cloud-showers-heavy', 'description' => 'Mưa rào nặng hạt'],
-        95 => ['icon' => 'fa-bolt', 'description' => 'Mưa dông nhẹ'],
-        96 => ['icon' => 'fa-bolt', 'description' => 'Mưa dông có mưa đá nhẹ'],
-        99 => ['icon' => 'fa-bolt', 'description' => 'Mưa dông có mưa đá nặng']
+    // Mapping WeatherAPI.com condition codes to local icon codes (partial list)
+    private $conditionCodeToIcon = [
+        1000 => ['day' => '01d', 'night' => '01n'], // Sunny/Clear
+        1003 => ['day' => '02d', 'night' => '02n'], // Partly cloudy
+        1006 => ['day' => '03d', 'night' => '03n'], // Cloudy
+        1009 => ['day' => '04d', 'night' => '04n'], // Overcast
+        1030 => ['day' => '50d', 'night' => '50n'], // Mist
+        1063 => ['day' => '09d', 'night' => '09n'], // Patchy rain possible
+        1066 => ['day' => '13d', 'night' => '13n'], // Patchy snow possible
+        1069 => ['day' => '09d', 'night' => '09n'], // Patchy sleet possible
+        1072 => ['day' => '09d', 'night' => '09n'], // Patchy freezing drizzle
+        1087 => ['day' => '04d', 'night' => '04n'], // Thundery outbreaks possible
+        1114 => ['day' => '13d', 'night' => '13n'], // Blowing snow
+        1117 => ['day' => '13d', 'night' => '13n'], // Blizzard
+        1135 => ['day' => '50d', 'night' => '50n'], // Fog
+        1147 => ['day' => '50d', 'night' => '50n'], // Freezing fog
+        1150 => ['day' => '09d', 'night' => '09n'], // Patchy light drizzle
+        1153 => ['day' => '09d', 'night' => '09n'], // Light drizzle
+        1168 => ['day' => '09d', 'night' => '09n'], // Freezing drizzle
+        1171 => ['day' => '10d', 'night' => '10n'], // Heavy freezing drizzle
+        1180 => ['day' => '09d', 'night' => '09n'], // Patchy light rain
+        1183 => ['day' => '09d', 'night' => '09n'], // Light rain
+        1186 => ['day' => '09d', 'night' => '09n'], // Moderate rain at times
+        1189 => ['day' => '10d', 'night' => '10n'], // Moderate rain
+        1192 => ['day' => '10d', 'night' => '10n'], // Heavy rain at times
+        1195 => ['day' => '10d', 'night' => '10n'], // Heavy rain
+        1198 => ['day' => '09d', 'night' => '09n'], // Light freezing rain
+        1201 => ['day' => '10d', 'night' => '10n'], // Moderate/heavy freezing rain
+        1204 => ['day' => '13d', 'night' => '13n'], // Light sleet
+        1207 => ['day' => '13d', 'night' => '13n'], // Moderate/heavy sleet
+        1210 => ['day' => '13d', 'night' => '13n'], // Patchy light snow
+        1213 => ['day' => '13d', 'night' => '13n'], // Light snow
+        1216 => ['day' => '13d', 'night' => '13n'], // Patchy moderate snow
+        1219 => ['day' => '13d', 'night' => '13n'], // Moderate snow
+        1222 => ['day' => '13d', 'night' => '13n'], // Patchy heavy snow
+        1225 => ['day' => '13d', 'night' => '13n'], // Heavy snow
+        1237 => ['day' => '13d', 'night' => '13n'], // Ice pellets
+        1240 => ['day' => '09d', 'night' => '09n'], // Light rain shower
+        1243 => ['day' => '10d', 'night' => '10n'], // Moderate/heavy rain shower
+        1246 => ['day' => '10d', 'night' => '10n'], // Torrential rain shower
+        1249 => ['day' => '13d', 'night' => '13n'], // Light sleet showers
+        1252 => ['day' => '13d', 'night' => '13n'], // Moderate/heavy sleet showers
+        1255 => ['day' => '13d', 'night' => '13n'], // Light snow showers
+        1258 => ['day' => '13d', 'night' => '13n'], // Moderate/heavy snow showers
+        1261 => ['day' => '13d', 'night' => '13n'], // Light showers of ice pellets
+        1264 => ['day' => '13d', 'night' => '13n'], // Moderate/heavy ice pellet showers
+        1273 => ['day' => '04d', 'night' => '04n'], // Patchy light rain with thunder
+        1276 => ['day' => '04d', 'night' => '04n'], // Moderate/heavy rain with thunder
+        1279 => ['day' => '04d', 'night' => '04n'], // Patchy light snow with thunder
+        1282 => ['day' => '04d', 'night' => '04n'], // Moderate/heavy snow with thunder
     ];
 
     /**
@@ -52,137 +78,75 @@ class WeatherService
         // Get location data with model instance
         $locationData = $this->getLocationData($location, $type);
 
-        if (!$locationData) {
-            // If not found in database, search using open-meteo geocoding API
-            $coordinates = $this->geocodeLocation($location);
-            if (!$coordinates) {
-                return null;
-            }
-            $locationName = $coordinates['name'];
-            $lat = $coordinates['lat'];
-            $lng = $coordinates['lng'];
-        } else {
-            $locationName = $locationData['name'];
+        if ($locationData) {
             $locationModel = $locationData['model'];
-
-            // Check if coordinates exist in the model
             $coordinates = $locationModel->getCoordinates();
-
             if ($coordinates) {
-                $lat = $coordinates['lat'];
-                $lng = $coordinates['lng'];
+                $q = $coordinates['lat'] . ',' . $coordinates['lng'];
             } else {
-                // If coordinates don't exist in model, try to geocode
-                try {
-                    // Create address based on location type
-                    if ($type === 'province') {
-                        $addressToGeocode = $locationModel->full_name;
-                    } elseif ($type === 'district') {
-                        $addressToGeocode = $locationModel->full_name;
-                        if ($locationModel->province) {
-                            $addressToGeocode .= ', ' . $locationModel->province->name;
-                        }
-                    } elseif ($type === 'ward') {
-                        $addressToGeocode = $locationModel->full_name;
-                        if ($locationModel->district) {
-                            $addressToGeocode .= ', ' . $locationModel->district->name;
-                            if ($locationModel->district->province) {
-                                $addressToGeocode .= ', ' . $locationModel->district->province->name;
-                            }
-                        }
-                    } else {
-                        throw new \Exception("Invalid location type: {$type}");
-                    }
-
-                    $fallbackCoordinates = $this->geocodeLocation($addressToGeocode);
-                    if ($fallbackCoordinates) {
-                        $lat = $fallbackCoordinates['lat'];
-                        $lng = $fallbackCoordinates['lng'];
-
-                        // Save these coordinates to the model
-                        $locationModel->lat = $lat;
-                        $locationModel->lng = $lng;
-                        $locationModel->save();
-
-                        Log::info("Open-meteo geocoded and saved coordinates for {$addressToGeocode}: {$lat}, {$lng}");
-                    } else {
-                        // If all geocoding fails, return null
-                        Log::warning("Geocoding failed for {$addressToGeocode}. No coordinates available.");
-                        return null;
-                    }
-                } catch (\Exception $e) {
-                    Log::error("Error geocoding {$locationName}: " . $e->getMessage());
-                    return null;
+                // Construct full address
+                if ($type === 'province') {
+                    $q = $locationModel->full_name;
+                } elseif ($type === 'district') {
+                    $q = $locationModel->full_name . ', ' . $locationModel->province->name;
+                } elseif ($type === 'ward') {
+                    $q = $locationModel->full_name . ', ' . $locationModel->district->name . ', ' . $locationModel->district->province->name;
                 }
             }
+            $locationName = $locationData['name'];
+        } else {
+            $q = $location;
+            $locationName = $location;
         }
 
-        // Generate cache key based on location, type, data level and current date
-        $cacheKey = 'weather_' . $location . '_' . $type . '_' . $dataLevel . '_' . date('Y-m-d');
+        // Generate cache key
+        $cacheKey = 'weather_' . md5($q) . '_' . $dataLevel . '_' . date('Y-m-d');
 
-        // Check if we have cached data
         if (Cache::has($cacheKey) && (bool)setting('cache_enabled')) {
             return Cache::get($cacheKey);
         }
 
         try {
-            // Base parameters
-            $apiParams = [
-                'latitude' => $lat,
-                'longitude' => $lng,
-                'timezone' => 'Asia/Ho_Chi_Minh',
+            $apiKey = config('services.weatherapi.key');
+            $endpoint = '/forecast.json';
+
+            $params = [
+                'key' => $apiKey,
+                'q' => $q,
+                'days' => ($dataLevel === 'minimal') ? 1 : 7, // Free plan: max 3 days
+                'aqi' => 'no',
+                'alerts' => 'no',
             ];
 
-            // Set API parameters based on data level
-            switch ($dataLevel) {
-                case 'minimal':
-                    // Just current weather - for widget displays and listing pages
-                    $apiParams['current_weather'] = true;
-                    break;
-
-                case 'basic':
-                    // Current + basic daily - for district listings and summaries
-                    $apiParams['current_weather'] = true;
-                    $apiParams['daily'] = 'weathercode,temperature_2m_max,temperature_2m_min';
-                    $apiParams['forecast_days'] = 3;
-                    break;
-
-                case 'full':
-                default:
-                    // Complete data - for detailed location pages
-                    $apiParams['hourly'] = 'temperature_2m,relativehumidity_2m,precipitation,precipitation_probability,weathercode,windspeed_10m,visibility';
-                    $apiParams['daily'] = 'weathercode,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,sunrise,sunset';
-                    $apiParams['forecast_days'] = 15;
-                    $apiParams['current_weather'] = true;
-                    break;
-            }
-
-            // Make API request
-            $response = Http::get($this->baseUrl, $apiParams);
+            $response = Http::get($this->baseUrl . $endpoint, $params);
 
             if (!$response->successful()) {
-                throw new \Exception("Failed to fetch weather data: {$response->status()}");
+                throw new \Exception('Failed to fetch weather data: ' . $response->status());
             }
 
             $data = $response->json();
+
+            // Check for API error response
+            if (isset($data['error'])) {
+                Log::warning("WeatherAPI error: " . $data['error']['message']);
+                return null;
+            }
 
             // Process data based on level
             switch ($dataLevel) {
                 case 'minimal':
                     $formattedData = $this->formatMinimalWeatherData($data, $locationName);
                     break;
-
                 case 'basic':
                     $formattedData = $this->formatBasicWeatherData($data, $locationName);
                     break;
-
                 case 'full':
                 default:
                     $formattedData = $this->formatWeatherData($data, $locationName);
                     break;
             }
 
-            // Longer cache for lighter data
+            // Cache the data
             $cacheDuration = ($dataLevel === 'full') ? 3 : 6;
             if ((bool)setting('cache_enabled')) {
                 Cache::put($cacheKey, $formattedData, now()->addHours($cacheDuration));
@@ -200,23 +164,24 @@ class WeatherService
      */
     private function formatMinimalWeatherData($data, $locationName)
     {
-        $current = $data['current_weather'] ?? null;
+        $current = $data['current'] ?? null;
 
         if (!$current) {
             return null;
         }
 
-        $weatherCode = $current['weathercode'];
-        $weather = $this->getWeatherDescription($weatherCode);
+        $condition = $current['condition'];
+        $isDay = $current['is_day'];
+        $weatherIconCode = $this->getWeatherIconCode($condition['code'], $isDay);
 
         return [
             'location' => $locationName,
             'current' => [
-                'temperature' => round($current['temperature']),
-                'weather_code' => $weatherCode,
-                'weather_description' => $weather['description'],
-                'weather_icon' => $weather['icon'],
-                'weather_image' => $this->getWeatherImagePath($weatherCode)
+                'temperature' => round($current['temp_c']),
+                'weather_code' => $condition['code'],
+                'weather_description' => $condition['text'],
+                'weather_icon' => $weatherIconCode,
+                'weather_image' => '/assets/images/weather-1/' . $weatherIconCode . '.png'
             ]
         ];
     }
@@ -228,27 +193,26 @@ class WeatherService
     {
         $minimal = $this->formatMinimalWeatherData($data, $locationName);
 
-        if (!$minimal || !isset($data['daily'])) {
+        if (!$minimal || !isset($data['forecast']['forecastday'])) {
             return $minimal;
         }
 
-        $daily = $data['daily'];
+        $forecastDays = $data['forecast']['forecastday'];
         $dailyForecasts = [];
-        $days = count($daily['time']);
 
-        for ($i = 0; $i < min($days, 3); $i++) {
-            $weatherCode = $daily['weathercode'][$i];
-            $weatherInfo = $this->getWeatherDescription($weatherCode);
+        foreach (array_slice($forecastDays, 0, 3) as $day) {
+            $condition = $day['day']['condition'];
+            $weatherIconCode = $this->getWeatherIconCode($condition['code'], true); // Daytime for daily forecast
 
             $dailyForecasts[] = [
-                'date' => date('d/m', strtotime($daily['time'][$i])),
-                'day_name' => $this->getDayName($daily['time'][$i]),
-                'max_temp' => round($daily['temperature_2m_max'][$i]),
-                'min_temp' => round($daily['temperature_2m_min'][$i]),
-                'weather_code' => $weatherCode,
-                'weather_description' => $weatherInfo['description'],
-                'weather_icon' => $weatherInfo['icon'],
-                'weather_image' => $this->getWeatherImagePath($weatherCode)
+                'date' => date('d/m', strtotime($day['date'])),
+                'day_name' => $this->getDayName($day['date']),
+                'max_temp' => round($day['day']['maxtemp_c']),
+                'min_temp' => round($day['day']['mintemp_c']),
+                'weather_code' => $condition['code'],
+                'weather_description' => $condition['text'],
+                'weather_icon' => $weatherIconCode,
+                'weather_image' => '/assets/images/weather-1/' . $weatherIconCode . '.png'
             ];
         }
 
@@ -257,11 +221,107 @@ class WeatherService
     }
 
     /**
+     * Format full weather data (current + daily + hourly)
+     */
+    public function formatWeatherData($data, $locationName)
+    {
+        $current = $data['current'] ?? null;
+        $forecast = $data['forecast']['forecastday'] ?? null;
+
+        if (!$current || !$forecast) {
+            return null;
+        }
+
+        $condition = $current['condition'];
+        $isDay = $current['is_day'];
+        $weatherIconCode = $this->getWeatherIconCode($condition['code'], $isDay);
+
+        // Format current weather
+        $currentWeather = [
+            'temperature' => round($current['temp_c']),
+            'feels_like' => round($current['feelslike_c']),
+            'weather_code' => $condition['code'],
+            'weather_description' => $condition['text'],
+            'weather_icon' => $weatherIconCode,
+            'weather_image' => '/assets/images/weather-1/' . $weatherIconCode . '.png',
+            'humidity' => $current['humidity'],
+            'wind_speed' => number_format($current['wind_kph'], 2),
+            'precipitation' => $current['precip_mm'],
+            'precipitation_probability' => $forecast[0]['hour'][date('H')]['chance_of_rain'], // Use hourly for current
+            'visibility' => $current['vis_km']
+        ];
+
+        // Format daily forecast
+        $dailyForecasts = [];
+        foreach ($forecast as $day) {
+            $condition = $day['day']['condition'];
+            $weatherIconCode = $this->getWeatherIconCode($condition['code'], true); // Daytime for daily
+
+            $dailyForecasts[] = [
+                'date' => date('d/m', strtotime($day['date'])),
+                'full_date' => date('Y-m-d', strtotime($day['date'])),
+                'day_name' => $this->getDayName($day['date']),
+                'max_temp' => round($day['day']['maxtemp_c']),
+                'min_temp' => round($day['day']['mintemp_c']),
+                'weather_code' => $condition['code'],
+                'weather_description' => $condition['text'],
+                'weather_icon' => $weatherIconCode,
+                'weather_image' => '/assets/images/weather-1/' . $weatherIconCode . '.png',
+                'precipitation_sum' => $day['day']['totalprecip_mm'],
+                'precipitation_probability' => $day['day']['daily_chance_of_rain'],
+                'sunrise' => date('H:i', strtotime($day['astro']['sunrise'])),
+                'sunset' => date('H:i', strtotime($day['astro']['sunset']))
+            ];
+        }
+
+        // Format hourly forecast for next 48 hours
+        $hourlyForecasts = [];
+        $currentTime = time();
+        $count = 0;
+
+        foreach ($forecast as $day) {
+            foreach ($day['hour'] as $hour) {
+                $hourTime = strtotime($hour['time']);
+                if ($hourTime > $currentTime && $count < 48) {
+                    $condition = $hour['condition'];
+                    $isDay = $hour['is_day'];
+                    $weatherIconCode = $this->getWeatherIconCode($condition['code'], $isDay);
+
+                    $hourlyForecasts[] = [
+                        'time' => date('H:i', $hourTime),
+                        'full_time' => $hour['time'],
+                        'temperature' => round($hour['temp_c']),
+                        'weather_code' => $condition['code'],
+                        'weather_description' => $condition['text'],
+                        'weather_icon' => $weatherIconCode,
+                        'weather_image' => '/assets/images/weather-1/' . $weatherIconCode . '.png',
+                        'precipitation' => $hour['precip_mm'],
+                        'precipitation_probability' => $hour['chance_of_rain'],
+                        'wind_speed' => $hour['wind_kph'],
+                        'humidity' => $hour['humidity'],
+                        'visibility' => $hour['vis_km']
+                    ];
+                    $count++;
+                }
+            }
+        }
+
+        // Get time of day temperatures
+        $timeOfDayTemps = $this->getTimeOfDayTemperatures($hourlyForecasts);
+
+        return [
+            'location' => $locationName,
+            'current' => $currentWeather,
+            'daily' => $dailyForecasts,
+            'hourly' => $hourlyForecasts,
+            'time_of_day' => $timeOfDayTemps,
+            'sunrise' => $dailyForecasts[0]['sunrise'] ?? '06:00',
+            'sunset' => $dailyForecasts[0]['sunset'] ?? '18:00'
+        ];
+    }
+
+    /**
      * Get location data from the database
-     *
-     * @param string $location Location code or code_name
-     * @param string $type Location type (province, district, ward)
-     * @return array|null Location data
      */
     private function getLocationData($location, $type = 'province')
     {
@@ -314,7 +374,6 @@ class WeatherService
 
         $results = [];
         foreach ($featuredProvinces as $province) {
-            // Use minimal data level for featured locations
             $data = $this->getWeatherData($province->code_name, 'province', 'minimal');
             if ($data) {
                 $results[] = [
@@ -325,7 +384,7 @@ class WeatherService
         }
 
         if ((bool)setting('cache_enabled')) {
-            Cache::put($cacheKey, $results, now()->addHours(6)); // Cache longer for lightweight data
+            Cache::put($cacheKey, $results, now()->addHours(6));
         }
 
         return $results;
@@ -363,11 +422,10 @@ class WeatherService
     }
 
     /**
-     * Get weather news
+     * Get weather news (static for now)
      */
     public function getWeatherNews()
     {
-        // In a real scenario, this might come from your articles database
         return [
             [
                 'title' => 'Hòa mình vào lá phổi xanh giữa nắng và gió cao nguyên ở biển hồ chè Gia Lai',
@@ -393,154 +451,22 @@ class WeatherService
     }
 
     /**
-     * Geocode a location name to get coordinates using open-meteo API
+     * Get weather icon code based on WeatherAPI condition code
      */
-    public function geocodeLocation($query)
+    public function getWeatherIconCode($conditionCode, $isDay)
     {
-        try {
-            // Use the Goong.io API
-            $response = Http::get($this->geocodingUrl, [
-                'address' => $query,
-                'api_key' => '4ZIRqmkfhJXwuLaYx5LxT6pMGeRcuTOup34iC0cn'
-            ]);
-
-            $data = $response->json();
-
-            // Check if the response is successful and has results
-            if (!$response->successful() || $data['status'] !== 'OK' || empty($data['results'])) {
-                Log::warning("Geocoding failed for query: {$query}. Status: " . ($data['status'] ?? 'unknown'));
-                return null;
-            }
-
-            // Get the first result
-            $result = $data['results'][0];
-
-            // Extract the needed data from the result
-            return [
-                'name' => $result['formatted_address'], // Using formatted_address as the name
-                'lat' => $result['geometry']['location']['lat'],
-                'lng' => $result['geometry']['location']['lng']
-            ];
-
-        } catch (\Exception $e) {
-            Log::error("Geocoding failed: " . $e->getMessage());
-            return null;
+        $timeOfDay = $isDay ? 'day' : 'night';
+        if (isset($this->conditionCodeToIcon[$conditionCode])) {
+            return $this->conditionCodeToIcon[$conditionCode][$timeOfDay];
         }
-    }
-
-    // The remaining methods stay the same
-    public function formatWeatherData($data, $locationName)
-    {
-        $current = $data['current_weather'] ?? null;
-        $daily = $data['daily'] ?? null;
-        $hourly = $data['hourly'] ?? null;
-
-        if (!$current || !$daily || !$hourly) {
-            return null;
-        }
-
-        // Get current weather code
-        $weatherCode = $current['weathercode'];
-        $weather = $this->getWeatherDescription($weatherCode);
-
-        // Get current visibility (in meters, convert to km)
-        $visibility = $this->getCurrentHourlyValue($hourly, 'visibility');
-        $visibilityKm = is_numeric($visibility) ? round($visibility / 1000, 1) : 10; // Default to 10km
-
-        // Format current weather
-        $currentWeather = [
-            'temperature' => round($current['temperature']),
-            'feels_like' => $this->calculateFeelsLike($current['temperature'],
-                $this->getCurrentHourlyValue($hourly, 'relativehumidity_2m'),
-                $current['windspeed']),
-            'weather_code' => $weatherCode,
-            'weather_description' => $weather['description'],
-            'weather_icon' => $weather['icon'],
-            'weather_image' => $this->getWeatherImagePath($weatherCode),
-            'humidity' => $this->getCurrentHourlyValue($hourly, 'relativehumidity_2m'),
-            'wind_speed' => number_format($current['windspeed'], 2),
-            'precipitation' => $this->getCurrentHourlyValue($hourly, 'precipitation'),
-            'precipitation_probability' => $this->getCurrentHourlyValue($hourly, 'precipitation_probability'),
-            'visibility' => $visibilityKm
-        ];
-
-        // Format daily forecast for next days
-        $dailyForecasts = [];
-        $days = count($daily['time']);
-
-        for ($i = 0; $i < $days; $i++) {
-            $weatherCode = $daily['weathercode'][$i];
-            $weatherInfo = $this->getWeatherDescription($weatherCode);
-
-            $sunrise = isset($daily['sunrise'][$i]) ? date('H:i', strtotime($daily['sunrise'][$i])) : '06:00';
-            $sunset = isset($daily['sunset'][$i]) ? date('H:i', strtotime($daily['sunset'][$i])) : '18:00';
-
-            $dailyForecasts[] = [
-                'date' => date('d/m', strtotime($daily['time'][$i])),
-                'full_date' => date('Y-m-d', strtotime($daily['time'][$i])),
-                'day_name' => $this->getDayName($daily['time'][$i]),
-                'max_temp' => round($daily['temperature_2m_max'][$i]),
-                'min_temp' => round($daily['temperature_2m_min'][$i]),
-                'weather_code' => $weatherCode,
-                'weather_description' => $weatherInfo['description'],
-                'weather_icon' => $weatherInfo['icon'],
-                'weather_image' => $this->getWeatherImagePath($weatherCode),
-                'precipitation_sum' => $daily['precipitation_sum'][$i],
-                'precipitation_probability' => $daily['precipitation_probability_max'][$i],
-                'sunrise' => $sunrise,
-                'sunset' => $sunset
-            ];
-        }
-
-        // Format hourly forecast for today and upcoming days (48 hours)
-        $hourlyForecasts = [];
-        $currentHour = (int)date('H');
-
-        // Get hourly forecasts for the next 48 hours
-        for ($i = $currentHour; $i < $currentHour + 48 && $i < count($hourly['time']); $i++) {
-            $weatherCode = $hourly['weathercode'][$i];
-            $weatherInfo = $this->getWeatherDescription($weatherCode);
-
-            $hourlyForecasts[] = [
-                'time' => date('H:i', strtotime($hourly['time'][$i])),
-                'full_time' => $hourly['time'][$i],
-                'temperature' => round($hourly['temperature_2m'][$i]),
-                'weather_code' => $weatherCode,
-                'weather_description' => $weatherInfo['description'],
-                'weather_icon' => $weatherInfo['icon'],
-                'weather_image' => $this->getWeatherImagePath($weatherCode, $i),
-                'precipitation' => $hourly['precipitation'][$i],
-                'precipitation_probability' => isset($hourly['precipitation_probability'][$i]) ?
-                    $hourly['precipitation_probability'][$i] : 0,
-                'wind_speed' => $hourly['windspeed_10m'][$i],
-                'humidity' => $hourly['relativehumidity_2m'][$i],
-                'visibility' => isset($hourly['visibility'][$i]) ? round($hourly['visibility'][$i] / 1000, 1) : 10
-            ];
-        }
-
-        // Get time of day temperatures
-        $timeOfDayTemps = $this->getTimeOfDayTemperatures($hourlyForecasts);
-
-        return [
-            'location' => $locationName,
-            'current' => $currentWeather,
-            'daily' => $dailyForecasts,
-            'hourly' => $hourlyForecasts,
-            'time_of_day' => $timeOfDayTemps,
-            'sunrise' => $dailyForecasts[0]['sunrise'] ?? '06:00',
-            'sunset' => $dailyForecasts[0]['sunset'] ?? '18:00'
-        ];
+        return $isDay ? '03d' : '03n'; // Default to cloudy
     }
 
     /**
      * Calculate temperatures for different times of day
-     *
-     * @param array $hourlyForecasts
-     * @return array
      */
     public function getTimeOfDayTemperatures($hourlyForecasts)
     {
-        // Define time ranges
         $morningHours = [6, 7, 8, 9, 10, 11];
         $dayHours = [12, 13, 14, 15, 16, 17];
         $eveningHours = [18, 19, 20, 21];
@@ -553,7 +479,6 @@ class WeatherService
             'night' => ['temperatures' => []],
         ];
 
-        // Group hourly temperatures by time of day
         foreach ($hourlyForecasts as $hour) {
             if (empty($hour['full_time'])) continue;
 
@@ -570,7 +495,6 @@ class WeatherService
             }
         }
 
-        // Calculate min/max for each time period
         foreach ($timeOfDayTemps as $period => $data) {
             if (!empty($data['temperatures'])) {
                 $timeOfDayTemps[$period]['temperature'] = max($data['temperatures']);
@@ -583,131 +507,6 @@ class WeatherService
         }
 
         return $timeOfDayTemps;
-    }
-
-    /**
-     * Get weather description based on weather code
-     */
-    public function getWeatherDescription($code)
-    {
-        if (isset($this->weatherCodes[$code])) {
-            return $this->weatherCodes[$code];
-        }
-
-        // Default if code is not found
-        return [
-            'icon' => 'fa-cloud',
-            'description' => 'Thay đổi'
-        ];
-    }
-
-    /**
-     * Get weather image path based on weather code
-     */
-    public function getWeatherImagePath($code, $hour = null)
-    {
-        // Determine if it's daytime or nighttime
-        if ($hour === null) {
-            $hour = (int)date('H');
-        } elseif (is_numeric($hour) && $hour >= 24) {
-            $hour = $hour % 24; // Normalize hour if it's beyond 24
-        }
-
-        $isDaytime = ($hour >= 6 && $hour < 18); // Consider 6 AM to 6 PM as daytime
-        $timeCode = $isDaytime ? 'd' : 'n';
-
-        // Map weather code to icon code
-        $iconFile = $this->getWeatherIconCode($code, $timeCode);
-
-        return '/assets/images/weather-1/' . $iconFile . '.png';
-    }
-
-    /**
-     * Get the weather icon code based on weather code and time of day
-     */
-    public function getWeatherIconCode($code, $timeOfDay = 'd')
-    {
-        // Default to daytime if not specified
-        $timeOfDay = ($timeOfDay === 'n') ? 'n' : 'd';
-
-        // Map weather codes to icon filenames
-        switch (true) {
-            case $code === 0:
-                // Clear sky
-                return '01' . $timeOfDay;
-
-            case $code === 1:
-            case $code === 2:
-                // Mainly clear, partly cloudy
-                return '02' . $timeOfDay;
-
-            case $code === 3:
-            case $code === 45:
-            case $code === 48:
-                // Overcast, fog
-                return '03' . $timeOfDay;
-
-            case $code === 51:
-            case $code === 53:
-            case $code === 55:
-            case $code === 61:
-            case $code === 63:
-            case $code === 80:
-            case $code === 81:
-                // Light to moderate rain
-                return '09' . $timeOfDay;
-
-            case $code === 65:
-            case $code === 82:
-                // Heavy rain
-                return '10' . $timeOfDay;
-
-            case $code === 71:
-            case $code === 73:
-            case $code === 75:
-                // Snow - using rain icons for now
-                return '10' . $timeOfDay;
-
-            case $code === 95:
-            case $code === 96:
-            case $code === 99:
-                // Thunderstorms
-                return '04' . $timeOfDay;
-
-            default:
-                // Default to cloudy
-                return '03' . $timeOfDay;
-        }
-    }
-
-    /**
-     * Get current value from hourly data
-     */
-    public function getCurrentHourlyValue($hourly, $key)
-    {
-        $currentHour = (int)date('H');
-        if (isset($hourly[$key][$currentHour])) {
-            return $hourly[$key][$currentHour];
-        }
-
-        return 0;
-    }
-
-    /**
-     * Calculate feels like temperature
-     */
-    public function calculateFeelsLike($temperature, $humidity, $windSpeed)
-    {
-        // Simple approximation of "feels like" temperature
-        if ($temperature > 27 && $humidity > 40) {
-            // Hot and humid - feels warmer
-            return round($temperature + ($humidity - 40) / 10);
-        } else if ($temperature < 10 && $windSpeed > 5) {
-            // Cold and windy - wind chill effect
-            return round($temperature - ($windSpeed - 5) / 5);
-        }
-
-        return round($temperature);
     }
 
     /**
