@@ -29,6 +29,7 @@ class CreateSitemapsCommand extends Command
         '15ngaytoi' => ['name' => '15-Day', 'priority' => '0.5', 'path' => '15-ngay-toi'],
         '20ngaytoi' => ['name' => '20-Day', 'priority' => '0.5', 'path' => '20-ngay-toi'],
         '30ngaytoi' => ['name' => '30-Day', 'priority' => '0.5', 'path' => '30-ngay-toi'],
+        'article' => ['name' => 'Article', 'priority' => '0.5', 'path' => ''],
     ];
 
     public function handle()
@@ -71,7 +72,7 @@ class CreateSitemapsCommand extends Command
         $this->generateSitemapUrls($typesToGenerate);
 
         // Create posts sitemap if generating all types
-        if (!$typeOption) {
+        if (!$typeOption || $typeOption === 'article') {
             $this->createPostsSitemap();
         }
 
