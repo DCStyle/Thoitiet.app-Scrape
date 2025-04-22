@@ -644,14 +644,14 @@ class WeatherController extends Controller
             switch ($period) {
                 case 'hourly':
                     $viewData['SEOData'] = new SEOData(
-                        title: $customTitle ?: 'Dự báo thời tiết theo giờ ' . $locationName . ' - ' . setting('site_name'),
+                        title: $customTitle ?: 'Dự báo thời tiết theo giờ tại' . $locationName,
                         description: $customDescription ?: 'Thông tin dự báo thời tiết theo giờ tại ' . $locationName . '. Cập nhật nhiệt độ, mưa, nắng, gió mới nhất theo từng giờ.'
                     );
                     return view('weather.location-hourly', $viewData);
 
                 case 'tomorrow':
                     $viewData['SEOData'] = new SEOData(
-                        title: $customTitle ?: 'Dự báo thời tiết ngày mai ' . $locationName . ' - ' . setting('site_name'),
+                        title: $customTitle ?: 'Dự báo thời tiết ngày mai tại' . $locationName,
                         description: $customDescription ?: 'Thông tin dự báo thời tiết ngày mai tại ' . $locationName . '. Cập nhật nhiệt độ, mưa, nắng, gió mới nhất.'
                     );
                     return view('weather.location-tomorrow', $viewData);
@@ -660,7 +660,7 @@ class WeatherController extends Controller
                     $daysCount = (int) $days;
                     $viewData['daysCount'] = $daysCount;
                     $viewData['SEOData'] = new SEOData(
-                        title: $customTitle ?: "Dự báo thời tiết $daysCount ngày tới $locationName - " . setting('site_name'),
+                        title: $customTitle ?: "Dự báo thời tiết $daysCount ngày tới $locationName",
                         description: $customDescription ?: "Thông tin dự báo thời tiết $daysCount ngày tới tại $locationName. Cập nhật nhiệt độ, mưa, nắng, gió mới nhất."
                     );
                     return view('weather.location-daily', $viewData);
@@ -668,7 +668,7 @@ class WeatherController extends Controller
                 default:
                     // Regular location view (current weather)
                     $viewData['SEOData'] = new SEOData(
-                        title: $customTitle ?: 'Dự báo thời tiết ' . $locationName . ' - ' . setting('site_name'),
+                        title: $customTitle ?: 'Dự báo thời tiết ' . $locationName . ' hôm nay và nhiều ngày tới',
                         description: $customDescription ?: 'Thông tin dự báo thời tiết ' . $locationName . ' hôm nay và các ngày tới. Cập nhật nhiệt độ, mưa, nắng, gió mới nhất.'
                     );
                     return view('weather.location', $viewData);
