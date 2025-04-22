@@ -116,7 +116,7 @@ class WeatherService
 
             if (Cache::has($cacheKey) && (bool)setting('cache_enabled')) {
                 $cachedData = Cache::get($cacheKey);
-                if ($cachedData && !empty($cachedData)) {
+                if (!empty($cachedData)) {
                     return $cachedData;
                 }
                 // If cache exists but is empty/invalid, continue to retrieve fresh data
@@ -136,6 +136,7 @@ class WeatherService
                 'days' => ($dataLevel === 'minimal') ? 1 : 7, // Free plan: max 3 days
                 'aqi' => 'no',
                 'alerts' => 'no',
+                'lang' => 'vi'
             ];
 
             $response = Http::timeout(10)
@@ -335,13 +336,13 @@ class WeatherService
         $count = 0;
 
         foreach ($forecast as $day) {
-            if (!isset($day['hour']) || empty($day['hour'])) {
+            if (empty($day['hour'])) {
                 continue;
             }
 
             foreach ($day['hour'] as $hour) {
                 // Add more robust checks
-                if (!isset($hour['time']) || empty($hour['time'])) {
+                if (empty($hour['time'])) {
                     continue; // Skip this hour if time is missing
                 }
 

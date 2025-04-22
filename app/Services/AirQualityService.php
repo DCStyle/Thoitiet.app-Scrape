@@ -33,6 +33,7 @@ class AirQualityService
                 'days' => 1,
                 'aqi' => 'yes',
                 'alerts' => 'no',
+                'lang' => 'vi'
             ]);
 
             if (!$response->successful()) {

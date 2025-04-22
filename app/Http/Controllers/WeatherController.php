@@ -72,9 +72,12 @@ class WeatherController extends Controller
             // Get all provinces for navigation
             $provinces = Province::orderBy('name')->get();
 
+            $customTitle = setting('site_name');
+            $customDescription = setting('site_description');
+
             $SEOData = new SEOData(
-                title: 'Dự báo thời tiết ' . ($weatherData['location'] ?? 'Việt Nam') . ' - ' . setting('site_name'),
-                description: 'Thông tin dự báo thời tiết ' . ($weatherData['location'] ?? 'Việt Nam') . ' hôm nay và các ngày tới. Cập nhật nhiệt độ, mưa, nắng, gió mới nhất.'
+                title: $customTitle ?: 'Dự báo thời tiết ' . ($weatherData['location'] ?? 'Việt Nam') . ' - ' . setting('site_name'),
+                description: $customDescription ?: 'Thông tin dự báo thời tiết ' . ($weatherData['location'] ?? 'Việt Nam') . ' hôm nay và các ngày tới. Cập nhật nhiệt độ, mưa, nắng, gió mới nhất.'
             );
 
             return view('weather.index', compact(
@@ -470,6 +473,8 @@ class WeatherController extends Controller
      */
     protected function showForecastForLocation($province, $period = null, $district = null, $ward = null, $days = null)
     {
+        $locationModel = $ward ?? $district ?? $province;
+
         try {
             // Determine the location type and code name for API request
             if ($ward) {
@@ -488,7 +493,6 @@ class WeatherController extends Controller
 
             // Get weather data
             $weatherData = $this->weatherService->getWeatherData($locationCode, $locationType);
-
             if (!$weatherData) {
                 Log::error("Weather data unavailable for {$locationName}");
 
@@ -500,7 +504,7 @@ class WeatherController extends Controller
             }
 
             // Check for required data
-            if (!isset($weatherData['daily']) || empty($weatherData['daily'])) {
+            if (empty($weatherData['daily'])) {
                 Log::error("Missing daily forecast data for {$locationName}");
 
                 // Create fallback data if missing
@@ -533,9 +537,7 @@ class WeatherController extends Controller
                         continue;
                     }
 
-                    $precipProb = isset($hour['precipitation_probability']) ?
-                        $hour['precipitation_probability'] :
-                        rand(0, 100); // Fallback to random if not available
+                    $precipProb = $hour['precipitation_probability'] ?? rand(0, 100); // Fallback to random if not available
 
                     $hourlyChartData[] = [
                         'time' => $hour['time'],
@@ -580,14 +582,12 @@ class WeatherController extends Controller
             ];
 
             // Get time of day temperatures
-            $timeOfDayTemps = isset($weatherData['time_of_day']) ?
-                $weatherData['time_of_day'] :
-                [
-                    'day' => ['temperature' => 31, 'temperature_night' => 30],
-                    'night' => ['temperature' => 22, 'temperature_night' => 23],
-                    'morning' => ['temperature' => 19, 'temperature_night' => 20],
-                    'evening' => ['temperature' => 30, 'temperature_night' => 29]
-                ];
+            $timeOfDayTemps = $weatherData['time_of_day'] ?? [
+                'day' => ['temperature' => 31, 'temperature_night' => 30],
+                'night' => ['temperature' => 22, 'temperature_night' => 23],
+                'morning' => ['temperature' => 19, 'temperature_night' => 20],
+                'evening' => ['temperature' => 30, 'temperature_night' => 29]
+            ];
 
             // Get latest weather news
             $weatherNews = $this->getLatestArticles();
@@ -635,19 +635,24 @@ class WeatherController extends Controller
                 $viewData['wards'] = $district->wards()->orderBy('name')->get();
             }
 
+            // Get metadata
+            $metadata = $this->getMetadata();
+            $customTitle = $metadata['title'] ?? null;
+            $customDescription = $metadata['description'] ?? null;
+
             // Choose template and set SEO data based on forecast period
             switch ($period) {
                 case 'hourly':
                     $viewData['SEOData'] = new SEOData(
-                        title: 'Dự báo thời tiết theo giờ ' . $locationName . ' - ' . setting('site_name'),
-                        description: 'Thông tin dự báo thời tiết theo giờ tại ' . $locationName . '. Cập nhật nhiệt độ, mưa, nắng, gió mới nhất theo từng giờ.'
+                        title: $customTitle ?: 'Dự báo thời tiết theo giờ ' . $locationName . ' - ' . setting('site_name'),
+                        description: $customDescription ?: 'Thông tin dự báo thời tiết theo giờ tại ' . $locationName . '. Cập nhật nhiệt độ, mưa, nắng, gió mới nhất theo từng giờ.'
                     );
                     return view('weather.location-hourly', $viewData);
 
                 case 'tomorrow':
                     $viewData['SEOData'] = new SEOData(
-                        title: 'Dự báo thời tiết ngày mai ' . $locationName . ' - ' . setting('site_name'),
-                        description: 'Thông tin dự báo thời tiết ngày mai tại ' . $locationName . '. Cập nhật nhiệt độ, mưa, nắng, gió mới nhất.'
+                        title: $customTitle ?: 'Dự báo thời tiết ngày mai ' . $locationName . ' - ' . setting('site_name'),
+                        description: $customDescription ?: 'Thông tin dự báo thời tiết ngày mai tại ' . $locationName . '. Cập nhật nhiệt độ, mưa, nắng, gió mới nhất.'
                     );
                     return view('weather.location-tomorrow', $viewData);
 
@@ -655,16 +660,16 @@ class WeatherController extends Controller
                     $daysCount = (int) $days;
                     $viewData['daysCount'] = $daysCount;
                     $viewData['SEOData'] = new SEOData(
-                        title: "Dự báo thời tiết $daysCount ngày tới $locationName - " . setting('site_name'),
-                        description: "Thông tin dự báo thời tiết $daysCount ngày tới tại $locationName. Cập nhật nhiệt độ, mưa, nắng, gió mới nhất."
+                        title: $customTitle ?: "Dự báo thời tiết $daysCount ngày tới $locationName - " . setting('site_name'),
+                        description: $customDescription ?: "Thông tin dự báo thời tiết $daysCount ngày tới tại $locationName. Cập nhật nhiệt độ, mưa, nắng, gió mới nhất."
                     );
                     return view('weather.location-daily', $viewData);
 
                 default:
                     // Regular location view (current weather)
                     $viewData['SEOData'] = new SEOData(
-                        title: 'Dự báo thời tiết ' . $locationName . ' - ' . setting('site_name'),
-                        description: 'Thông tin dự báo thời tiết ' . $locationName . ' hôm nay và các ngày tới. Cập nhật nhiệt độ, mưa, nắng, gió mới nhất.'
+                        title: $customTitle ?: 'Dự báo thời tiết ' . $locationName . ' - ' . setting('site_name'),
+                        description: $customDescription ?: 'Thông tin dự báo thời tiết ' . $locationName . ' hôm nay và các ngày tới. Cập nhật nhiệt độ, mưa, nắng, gió mới nhất.'
                     );
                     return view('weather.location', $viewData);
             }
@@ -982,5 +987,80 @@ class WeatherController extends Controller
             Log::error("Error getting day name: " . $e->getMessage());
             return 'T2'; // Default to Monday if any error occurs
         }
+    }
+
+    /**
+     * Build path for a location
+     *
+     * @param District|Province|Ward $locationModel
+     * @return string
+     */
+    protected function buildPathForLocation(Province|Ward|District $locationModel, string | null $period = null)
+    {
+        $path = $locationModel->getSlug();
+
+        switch ($period)
+        {
+            case 'hourly':
+                $path .= '/theo-gio';
+                break;
+            case 'tomorrow':
+                $path .= '/ngay-mai';
+                break;
+            case 'daily-3':
+                $path .= '/3-ngay-toi';
+                break;
+            case 'daily-5':
+                $path .= '/5-ngay-toi';
+                break;
+            case 'daily-7':
+                $path .= '/7-ngay-toi';
+                break;
+            case 'daily-10':
+                $path .= '/10-ngay-toi';
+                break;
+            case 'daily-15':
+                $path .= '/15-ngay-toi';
+                break;
+            case 'daily-20':
+                $path .= '/20-ngay-toi';
+                break;
+            case 'daily-30':
+                $path .= '/30-ngay-toi';
+                break;
+        }
+
+        return $path;
+    }
+
+    /**
+     * Checks and retrieves custom metadata for a given path.
+     *
+     * This method checks if the provided path matches any custom path settings defined
+     * for the site. If a match is found, it returns an array containing the associated
+     * title and description metadata. If no match is found, it returns null.
+     *
+     * @param string $path The path to check against custom metadata settings.
+     * @return array|null An associative array with 'title' and 'description' keys if metadata is found, or null otherwise.
+     */
+    protected function checkCustomPathMetadata($path)
+    {
+        // Get custom path settings
+        $pathTitles = setting('site_path_title') ? json_decode(setting('site_path_title'), true) : [];
+        $pathDescriptions = setting('site_path_description') ? json_decode(setting('site_path_description'), true) : [];
+
+        foreach ($pathTitles as $index => $titleData) {
+            $settingPath = array_key_first($titleData);
+
+            // Check if current path matches the setting path
+            if ($path === $settingPath || rtrim($path, '/') === rtrim($settingPath, '/')) {
+                return [
+                    'title' => $titleData[$settingPath],
+                    'description' => $pathDescriptions[$index][$settingPath] ?? ''
+                ];
+            }
+        }
+
+        return null;
     }
 }
