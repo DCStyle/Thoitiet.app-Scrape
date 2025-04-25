@@ -35,7 +35,7 @@
         <meta name="twitter:image" content="@yield('image', setting('site_og_image') ? asset(Storage::url(setting('site_og_image'))) : 'https://placehold.co/126')">
     @endif
 
-    <meta name="twitter:creator" content="{{ setting('site_creator', 'Kết Quả Xổ Số') }}">
+    <meta name="twitter:creator" content="{{ setting('site_creator', 'Thời tiết 24/7') }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <!-- Favicon -->
